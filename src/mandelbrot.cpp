@@ -67,9 +67,30 @@ void mandelbrot::calcValues(){
 
 	values = values;
 	values = values * ((values<max_iter).template cast<uint64_t>());
-	values = values*255/(max_iter-1);	
+	//values = values*255/(max_iter-1);	
 	
 }
+
+void mandelbrot::histColor(){
+	Array <double, 1, Dynamic> pixelCountPerIter = Array<double, 1, Dynamic>::Zero(max_iter);
+	
+	for (int i=0; i<max_iter; i++)
+		pixelCountPerIter(i) = (values==i).sum();
+
+	double total_counts = pixelCountPerIter.sum();
+
+	Array <double, Dynamic, Dynamic> hist_values = Array<double, Dynamic, Dynamic>::Zero(height,width);
+	
+	for (int i=0; i<width; i++){
+		for (int j=0; j<height; j++){
+			for (int iter=0; iter<=values(j,i); iter++)
+				hist_values(j,i)+=pixelCountPerIter(iter);
+		}
+	}
+	
+	hist_values = hist_values/hist_values.maxCoeff() * 255;
+	values = hist_values.template cast<uint64_t>();
+}	
 
 void mandelbrot::createImage(string fname){
 	cv::Mat values_cv(height, width, CV_8UC1);

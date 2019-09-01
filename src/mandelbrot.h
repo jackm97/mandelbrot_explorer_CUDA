@@ -16,7 +16,8 @@ class mandelbrot{
 	public:
 		mandelbrot(int H, int W, complex<double> center, double zoom, uint64_t max_iter);
 		void calcValues();
-		void createImage(string fname);
+		void histColor();
+		void createImage(string fname, bool disp=true; bool save=false);
 	private:
 		uint64_t max_iter;
 		int height;
