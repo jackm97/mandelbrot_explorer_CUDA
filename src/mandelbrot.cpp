@@ -20,7 +20,7 @@ mandelbrot::mandelbrot(int H, int W, complex<double> center, double zoom, uint64
 											  ci(Array<double,Dynamic,Dynamic>(height,width)),
 											  zr(Array<double,Dynamic,Dynamic>(height,width)),
 											  zi(Array<double,Dynamic,Dynamic>(height,width)),
-											  values(Array<uint64_t,Dynamic,Dynamic>(height,width))
+											  values(Array<double,Dynamic,Dynamic>(height,width))
 {	
 	this->max_iter = max_iter;
 	double aspect_ratio = double(W)/H;
@@ -51,59 +51,125 @@ mandelbrot::mandelbrot(int H, int W, complex<double> center, double zoom, uint64
 }
 
 void mandelbrot::calcValues(){
-	Array<uint64_t, Dynamic, Dynamic> valid_z(height, width);
+	Array<bool, Dynamic, Dynamic> valid_z(height, width);
 	Array<double, Dynamic, Dynamic> zr2 = zr, zi2 = zi;
-
-	while(((zr2+zi2)<=4 && values<=max_iter).any()){
-		valid_z = ((zr2+zi2)<4).template cast<uint64_t>();
-		zi = zi*zr;
-		zi += zi;
-		zi += ci;
-		zr = zr2 - zi2 + cr;
-		zr2 = zr*zr;
-		zi2 = zi*zi;
-		values =  valid_z + values;
+	
+	while((zr2+zi2<=1e6).any() && (values<max_iter).all()){
+		valid_z = ((zr2+zi2)<=1e6);
+		values = (valid_z).select(values+1,values);
+		zi = (valid_z).select(zi*zr,zi);
+		zi = (valid_z).select(zi+zi+ci,zi);
+		zr = (valid_z).select(zr2-zi2+cr,zr);
+		zr2 = (valid_z).select(zr*zr,zr2);
+		zi2 = (valid_z).select(zi*zi,zi2);
+		
 	}
-
-	values = values;
-	values = values * ((values<max_iter).template cast<uint64_t>());
-	//values = values*255/(max_iter-1);	
+	
+	values = (values<max_iter).select(values,0);
+	smoothColor();
+	histColor();	
 	
 }
 
-void mandelbrot::histColor(){
-	Array <double, 1, Dynamic> pixelCountPerIter = Array<double, 1, Dynamic>::Zero(max_iter);
+void mandelbrot::smoothColor(){
+	Array <bool, Dynamic, Dynamic> valid_z = values!=0;
+	Array <double, Dynamic, Dynamic> z2, log_z, nu;
 	
-	for (int i=0; i<max_iter; i++)
-		pixelCountPerIter(i) = (values==i).sum();
+	z2 = zr*zr + zi*zi;
+	log_z = log(z2)/2;
+	nu = log(log_z/log(2))/log(2);
+	values = valid_z.select(values+ 1 - nu,0);
+}
 
-	double total_counts = pixelCountPerIter.sum();
+void mandelbrot::histColor(){
+	Array<double,Dynamic,Dynamic> histogram = Array<double,Dynamic,Dynamic>::Zero(height, width);
+	
+	double m;
+	for (int i=0; i<width; i++){
+                for (int j=0; j<height; j++){
+			m = values(j,i);
+			if (m<max_iter)
+				histogram(floor(m)) += 1;
+		}
+	}
 
-	Array <double, Dynamic, Dynamic> hist_values = Array<double, Dynamic, Dynamic>::Zero(height,width);
+	double total = histogram.sum();
+	vector<double> hues;
+	double h = 0;
+	for (int i=0; i<max_iter; i++){
+		h += histogram(i)/total;
+		hues.push_back(h);
+	}
+	hues.push_back(h);
+
+	for (int i=0; i<width; i++){
+                for (int j=0; j<height; j++){
+			m = values(j,i);
+			double lerp = hues[floor(m)]*(1-fmod(m,1)) + hues[ceil(m)]*fmod(m,1);
+			int hue = int(255*lerp);
+			if (m<max_iter)
+				values(j,i) = hue;
+		}
+	}
+}	
+
+/*void mandelbrot::histColor(){
+	Array <double, 1, Dynamic> pixelCountPerIter = Array<double, 1, Dynamic>::Zero(max_iter);
 	
 	for (int i=0; i<width; i++){
 		for (int j=0; j<height; j++){
-			for (int iter=0; iter<=values(j,i); iter++)
-				hist_values(j,i)+=pixelCountPerIter(iter);
+			pixelCountPerIter(values(j,i))++;
 		}
 	}
-	
-	hist_values = hist_values/hist_values.maxCoeff() * 255;
-	values = hist_values.template cast<uint64_t>();
-}	
 
-void mandelbrot::createImage(string fname){
+	double total_counts = pixelCountPerIter.sum();
+
+	Array <double, Dynamic, Dynamic> hues = Array<double, Dynamic, Dynamic>::Zero(height,width);
+	
+	for (int i=0; i<width; i++){
+		for (int j=0; j<height; j++){
+			double iters = values(j,i);
+			for (int iter=1; iter<=iters; iter++){
+					hues(j,i) += pixelCountPerIter(iter);
+			}
+		}
+	}	
+	hues = hues * 255/hues.maxCoeff();
+	values = hues;
+
+	Array<double,Dynamic,Dynamic> color1 = floor(values);
+        Array<double,Dynamic,Dynamic> color2 = ceil(values);
+        Array<double,Dynamic,Dynamic> t = values;
+
+        for (int i=0; i<width; i++){
+                for (int j=0; j<height; j++){
+                        t(j,i) = fmod(values(j,i),1);
+                }
+        }
+
+	values = color1*(1-t) + color2*t;
+        values = values.round();
+}*/	
+
+void mandelbrot::createImage(string fname, bool disp, bool save){
 	cv::Mat values_cv(height, width, CV_8UC1);
 	cv::transpose(octane::eigen2cv(values.template cast<uint8_t>()),values_cv);
-
+	
 	cv::Mat image;
 	cv::applyColorMap(values_cv, image, 5);
 	
-	cv::namedWindow(fname, CV_WINDOW_NORMAL);
-	cv::setWindowProperty(fname, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
-	cv::imshow(fname,image);
-	cv::waitKey(0);
-	cv::destroyAllWindows();
+	if (save){
+		string save_loc = "../images/";
+		imwrite(save_loc + fname + ".jpg",image);
+	}
+
+	if (disp){
+		cv::namedWindow(fname, CV_WINDOW_NORMAL);
+		cv::setWindowProperty(fname, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+		cv::imshow(fname,image);
+		cv::waitKey(0);
+		cv::destroyAllWindows();
+	}
 	return;
 }
 

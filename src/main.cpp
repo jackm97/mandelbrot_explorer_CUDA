@@ -1,6 +1,10 @@
 #include "mandelbrot.h"
 #include <complex>
+#include <string>
 #include <iostream>
+#include <cmath>
+
+using namespace std;
 
 int main(){
 
@@ -15,10 +19,17 @@ int main(){
 
 	center= complex<double>(x,y);
 
-	//mandelbrot a(height,width,-0.761-1e-3,-0.761+1e-3,-0.0841-1e-3,-0.0841+1e-3);
 	mandelbrot a(height,width,center,zoom,max_iter);
 	a.calcValues();
 	a.createImage("hello");
+	
+	/*for (int i=0; i<960; i++){
+		string fname = "image" + to_string(i);
+		zoom*=pow(10,.00625*2);
+		mandelbrot a(height,width,center,zoom,max_iter);
+		a.calcValues();
+		a.createImage(fname,false,true);
+	}*/
 	
 	return 0;
 }
