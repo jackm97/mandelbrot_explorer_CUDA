@@ -3,10 +3,13 @@
 #include <string>
 #include <iostream>
 #include <cmath>
+#include <time.h>
 
 using namespace std;
 
-int main(){
+int main(int argc, char *argv[]){
+
+	cout << argv[1] << endl;
 
 	int height,width;
 	complex<double> center;
@@ -18,18 +21,23 @@ int main(){
 	cin >> zoom >> max_iter;
 
 	center= complex<double>(x,y);
-
-	mandelbrot a(height,width,center,zoom,max_iter);
-	a.calcValues();
-	a.createImage("hello");
 	
-	/*for (int i=0; i<960; i++){
-		string fname = "image" + to_string(i);
-		zoom*=pow(10,.00625*2);
+	
+	if (strcmp(argv[1],"0") == 0){
 		mandelbrot a(height,width,center,zoom,max_iter);
 		a.calcValues();
-		a.createImage(fname,false,true);
-	}*/
+		a.createImage("hello");
+	}
+	
+	else if(strcmp(argv[1],"1") == 0){
+		for (int i=0; i<960*2; i++){
+			string fname = "image" + to_string(i);
+			zoom*=pow(10,.00625);
+			mandelbrot a(height,width,center,zoom,max_iter);
+			a.calcValues();
+			a.createImage(fname,false,true);
+		}
+	}
 	
 	return 0;
 }

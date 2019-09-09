@@ -30,6 +30,7 @@ public:
 	   }
 	}
     }
+
     applyIter( Array<double, Dynamic, Dynamic> &values, Array<double, Dynamic, Dynamic> &zr, Array<double, Dynamic, Dynamic> &zi, Array<double, Dynamic, Dynamic> &cr, Array<double, Dynamic, Dynamic> &ci, size_t max_iter) :
         values(values),
     	zr(zr),

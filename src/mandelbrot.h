@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <complex>
 #include <string>
-#include <opencv2/opencv.hpp>
+#include <gmp.h>
 
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
@@ -20,10 +20,9 @@ class mandelbrot{
 		void histColor();
 		void createImage(string fname, bool disp=true, bool save=false);
 	private:
-		uint64_t max_iter;
+		size_t max_iter;
 		int height;
 		int width;
-		double pixelx, pixely;
 		Array<double,Dynamic,Dynamic> cr;
 		Array<double,Dynamic, Dynamic> ci;
 		Array<double,Dynamic,Dynamic> zr;

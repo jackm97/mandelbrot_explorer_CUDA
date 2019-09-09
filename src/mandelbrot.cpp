@@ -2,6 +2,8 @@
 
 #include "mandelbrot.h"
 #include "Eigen2CV.h"
+#include "tbb/tbb.h"
+#include "applyIter.h"
 #include <complex>
 #include <Eigen/Dense>
 #include <string>
@@ -15,7 +17,7 @@ using namespace std;
 using Eigen::Array;
 using Eigen::Dynamic;
 
-mandelbrot::mandelbrot(int H, int W, complex<double> center, double zoom, uint64_t max_iter): height(H), width(W), 
+mandelbrot::mandelbrot(int H, int W, complex<double> center, double zoom, size_t max_iter): height(2*H), width(2*W), 
 											  cr(Array<double,Dynamic,Dynamic>(height,width)),
 											  ci(Array<double,Dynamic,Dynamic>(height,width)),
 											  zr(Array<double,Dynamic,Dynamic>(height,width)),
@@ -51,34 +53,66 @@ mandelbrot::mandelbrot(int H, int W, complex<double> center, double zoom, uint64
 }
 
 void mandelbrot::calcValues(){
-	Array<bool, Dynamic, Dynamic> valid_z(height, width);
-	Array<double, Dynamic, Dynamic> zr2 = zr, zi2 = zi;
+
+	tbb::parallel_for(blocked_range2d<size_t>(0, height, 0, width), applyIter(values,zr,zi,cr,ci,max_iter));
+	/*double iters=0,
+	       R2=1e6,
+	       zr2=0,
+	       zi2=0;
 	
-	while((zr2+zi2<=1e6).any() && (values<max_iter).all()){
-		valid_z = ((zr2+zi2)<=1e6);
-		values = (valid_z).select(values+1,values);
-		zi = (valid_z).select(zi*zr,zi);
-		zi = (valid_z).select(zi+zi+ci,zi);
-		zr = (valid_z).select(zr2-zi2+cr,zr);
-		zr2 = (valid_z).select(zr*zr,zr2);
-		zi2 = (valid_z).select(zi*zi,zi2);
-		
-	}
+	for (int i=0; i<width; i++){
+                for (int j=0; j<height; j++){
+			iters=0;
+			zr2=0;
+			zi2=0;
+			while((zr2+zi2<=R2) && (iters<max_iter)){
+				zi(j,i) = zi(j,i) * zr(j,i);
+				zi(j,i) = zi(j,i) + zi(j,i) + ci(j,i);
+				zr(j,i) = zr2 - zi2 + cr(j,i);
+				zr2 = zr(j,i) * zr(j,i);
+				zi2 = zi(j,i) * zi(j,i);
+				iters++;
+			}
+			values(j,i) = iters;
+		}
+	}*/
 	
-	values = (values<max_iter).select(values,0);
+	/*Array <double, Dynamic, Dynamic> logz = log(log(zr2+zi2)/power);	
+	double K = logz.maxCoeff() - logz.minCoeff();
+	values = (values<max_iter).select(logz/K,max_iter);
+	values = (values!=max_iter).select(255*sin(2*M_PI*values),0);
+	values = round(values);*/
+
 	smoothColor();
-	histColor();	
+	values = (values==max_iter).select(0,values);
+	//histColor();
 	
+	double K = 4;
+	values = ((K*values/510)-(K*values/510).floor());
+	values = (values<.5).select(255*values,255*(1-values));
+	//values = 255/2*(1 - cos(2*M_PI*values/K));
+	//values = 1 - (1-values/values.maxCoeff()).pow(1./6);
+
+	/*double min,max;
+	min = values.minCoeff();
+	max = values.maxCoeff();
+	values = (values!=0).select(255*(values-min)/(max-min),0);*/
+	values = values.round();	
 }
 
 void mandelbrot::smoothColor(){
-	Array <bool, Dynamic, Dynamic> valid_z = values!=0;
-	Array <double, Dynamic, Dynamic> z2, log_z, nu;
-	
-	z2 = zr*zr + zi*zi;
-	log_z = log(z2)/2;
-	nu = log(log_z/log(2))/log(2);
-	values = valid_z.select(values+ 1 - nu,0);
+	double z2, log_z, nu;
+
+	for (int i=0; i<width; i++){
+                for (int j=0; j<height; j++){
+			if (values(j,i)!=max_iter){	
+				z2 = zr(j,i) * zr(j,i) + zi(j,i) * zi(j,i);
+				log_z = log(z2)/2;
+				nu = log(log_z/log(2))/log(2);
+				values(j,i) = values(j,i) + 1 - nu;
+			}
+		}
+	}
 }
 
 void mandelbrot::histColor(){
@@ -106,9 +140,11 @@ void mandelbrot::histColor(){
                 for (int j=0; j<height; j++){
 			m = values(j,i);
 			double lerp = hues[floor(m)]*(1-fmod(m,1)) + hues[ceil(m)]*fmod(m,1);
-			int hue = int(255*lerp);
+			uint64_t hue = uint64_t(max_iter*lerp);
 			if (m<max_iter)
 				values(j,i) = hue;
+			else 
+				values(j,i) = 0;
 		}
 	}
 }	
@@ -156,7 +192,8 @@ void mandelbrot::createImage(string fname, bool disp, bool save){
 	cv::transpose(octane::eigen2cv(values.template cast<uint8_t>()),values_cv);
 	
 	cv::Mat image;
-	cv::applyColorMap(values_cv, image, 5);
+	cv::applyColorMap(values_cv, image, cv::COLORMAP_BONE);
+	cv::resize(image,image,cv::Size(),.5,.5);
 	
 	if (save){
 		string save_loc = "../images/";
