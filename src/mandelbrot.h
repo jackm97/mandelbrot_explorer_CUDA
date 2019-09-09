@@ -2,32 +2,45 @@
 
 #include <Eigen/Dense>
 #include <complex>
-#include <string>
-#include <gmp.h>
+#include <opencv2/opencv.hpp>
 
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
-using Eigen::Array;
-using Eigen::Dynamic;
-using Eigen::Index;
-using namespace std;
 
 class mandelbrot{
 	public:
-		mandelbrot(int H, int W, complex<double> center, double zoom, uint64_t max_iter);
+		typedef std::complex<double> Point;
+		typedef Eigen::Array<double,Eigen::Dynamic,Eigen::Dynamic> Array;
+		typedef cv::Mat ArrayCV; 
+		
+		mandelbrot(int H, int W, mandelbrot::Point center, double zoom, size_t max_iter);
+		void changeCenter(mandelbrot::Point new_center);
+		void changeZoom(double new_zoom);
+		void changeMaxIter(size_t new_max_iter);
+		mandelbrot::ArrayCV getImageCV();
+	
+	private:
+		int height;
+		int width;
+		
+		mandelbrot::Point center;
+		double zoom;
+		size_t max_iter;
+		
+		bool isCalc=false;
+		
+		mandelbrot::Array cr;
+		mandelbrot::Array ci;
+		mandelbrot::Array zr;
+		mandelbrot::Array zi;
+		
+		mandelbrot::Array values;
+		mandelbrot::ArrayCV image;
+
+		void resetValues();
 		void calcValues();
 		void smoothColor();
 		void histColor();
-		void createImage(string fname, bool disp=true, bool save=false);
-	private:
-		size_t max_iter;
-		int height;
-		int width;
-		Array<double,Dynamic,Dynamic> cr;
-		Array<double,Dynamic, Dynamic> ci;
-		Array<double,Dynamic,Dynamic> zr;
-		Array<double,Dynamic,Dynamic> zi;
-		Array<double,Dynamic,Dynamic> values;
 };
 
 #endif

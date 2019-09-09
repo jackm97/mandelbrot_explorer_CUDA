@@ -1,12 +1,13 @@
 #include "tbb/tbb.h"
-#include <Eigen/Dense>
+#include "mandelbrot.h"
 
+#ifndef APPLYITER_H
+#define APPLYITER_H
  
 using namespace tbb;
-using Eigen::Array;
  
 class applyIter {
-    Array<double, Dynamic, Dynamic> &values, &zr, &zi, &cr, &ci;
+    mandelbrot::Array &values, &zr, &zi, &cr, &ci;
     size_t max_iter;
 public:
     void operator()( const blocked_range2d<size_t>& r ) const {
@@ -21,10 +22,12 @@ public:
                         zr2=0;
                         zi2=0;
 			q = (cr(j,i)-1./4)*(cr(j,i)-1./4) + ci(j,i)*ci(j,i);
+			
 			if (q*(q+(cr(j,i)-1./4)) <= 1./4*ci(j,i)*ci(j,i))
 				iters=max_iter;
 			else if ((cr(j,i)+1)*(cr(j,i)+1) + ci(j,i)*ci(j,i) <= 1./16)
 				iters=max_iter;
+			
 			while((zr2+zi2<=R2) && (iters<max_iter)){
                                 zi(j,i) = zi(j,i) * zr(j,i);
                                 zi(j,i) = zi(j,i) + zi(j,i) + ci(j,i);
@@ -38,7 +41,7 @@ public:
 	}
     }
 
-    applyIter( Array<double, Dynamic, Dynamic> &values, Array<double, Dynamic, Dynamic> &zr, Array<double, Dynamic, Dynamic> &zi, Array<double, Dynamic, Dynamic> &cr, Array<double, Dynamic, Dynamic> &ci, size_t max_iter) :
+    applyIter( mandelbrot::Array &values, mandelbrot::Array &zr, mandelbrot::Array &zi, mandelbrot::Array &cr, mandelbrot::Array &ci, size_t max_iter) :
         values(values),
     	zr(zr),
 	zi(zi),
@@ -47,3 +50,5 @@ public:
 	max_iter(max_iter)
     {}
 };
+
+#endif
