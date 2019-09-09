@@ -1,2 +1,2 @@
-g++ -I /usr/include/eigen3 -fopenmp -march=native -msse2 -O2 main.cpp mandelbrot.cpp -o main `pkg-config --cflags --libs opencv`
-ffmpeg -framerate 32 -start_number 0 -i image%d.jpg -vcodec mpeg4 test.avi
+g++ -I /usr/include/eigen3 -fopenmp -march=native -msse2 -O2 main.cpp mandelbrot.cpp -o main -ltbb -lrt `pkg-config --cflags --libs opencv`
+ffmpeg -framerate 32 -start_number 0 -i ../images/image%d.jpg -b 20000k -vcodec mpeg4 test4.avi
