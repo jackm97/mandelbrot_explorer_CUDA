@@ -8,14 +8,15 @@
 
 using namespace octane;
 
-mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, size_t max_iter): height(H), width(W), 
-											  center(center), zoom(zoom), max_iter(max_iter), 
-											  cr(mandelbrot::Array(height,width)),
-											  ci(mandelbrot::Array(height,width)),
-											  zr(mandelbrot::Array(height,width)),
-											  zi(mandelbrot::Array(height,width)),
-											  values(mandelbrot::Array(height,width)),
-											  image(mandelbrot::ArrayCV(height,width,CV_8UC1))
+mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, size_t max_iter): 
+	height(H), width(W), 
+	center(center), zoom(zoom), max_iter(max_iter), 
+	cr(mandelbrot::Array(height,width)),
+	ci(mandelbrot::Array(height,width)),
+	zr(mandelbrot::Array(height,width)),
+	zi(mandelbrot::Array(height,width)),
+	values(mandelbrot::Array(height,width)),
+	image(mandelbrot::ArrayCV(height,width,CV_8UC1))
 {
 	resetValues();
 }
