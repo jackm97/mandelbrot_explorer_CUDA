@@ -26,6 +26,7 @@ int main(int argc, char *argv[]){
 	if (strcmp(argv[1],"0") == 0){
 		mandelbrot::ArrayCV image = a.getImageCV();
 		cv::applyColorMap(image, image, cv::COLORMAP_BONE);
+		//cv::GaussianBlur(image, image, cv::Size(3,3), 0, 0);
         	cv::resize(image,image,cv::Size(),.5,.5);
 
 		string fname = "hello";
@@ -43,8 +44,8 @@ int main(int argc, char *argv[]){
 			a.changeZoom(zoom);
 			mandelbrot::ArrayCV image = a.getImageCV();
 
-
 			cv::applyColorMap(image, image, cv::COLORMAP_BONE);
+			//cv::GaussianBlur(image, image, cv::Size(3,3), 0, 0);
         		cv::resize(image,image,cv::Size(),.5,.5);
 
                 	string save_loc = "../images/";

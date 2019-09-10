@@ -104,9 +104,9 @@ void mandelbrot::calcValues(){
 	values = (values==max_iter).select(0,values);
 	//histColor();
 	
-	double K = 4;
-	values = ((K*values/510)-(K*values/510).floor());
-	values = (values<.5).select(255*values,255*(1-values));
+	double K = 510*10/5000;
+	values = ((K*values)-510*(K*values/510).floor());
+	values = (values<=255).select(values,(510-values));
 	
 	/*double min,max;
 	min = values.minCoeff();
