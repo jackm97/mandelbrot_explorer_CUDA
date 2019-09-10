@@ -36,6 +36,17 @@ void mandelbrot::changeMaxIter(size_t new_max_iter){
 	isCalc = false;
 }
 
+mandelbrot::ArrayCV mandelbrot::getImageCV(){
+	if (!isCalc){
+		resetValues();
+		calcValues();
+		cv::transpose(eigen2cv(values.template cast<uint8_t>()),image);
+		isCalc=true;
+	}
+
+	return image;
+}
+
 void mandelbrot::resetValues(){	
 	double aspect_ratio = double(width)/height;
 	double x_range, y_range, xmin, ymin, intervalx, intervaly;
@@ -152,15 +163,3 @@ void mandelbrot::histColor(){
 		}
 	}
 }	
-
-mandelbrot::ArrayCV mandelbrot::getImageCV(){
-	if (!isCalc){
-		resetValues();
-		calcValues();
-		cv::transpose(eigen2cv(values.template cast<uint8_t>()),image);
-		isCalc=true;
-	}
-
-	return image;
-}
-
