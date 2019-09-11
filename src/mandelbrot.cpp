@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 
-
+// hello
 using namespace octane;
 
 mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, size_t max_iter): 
