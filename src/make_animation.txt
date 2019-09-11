@@ -1,0 +1,1 @@
+ffmpeg -r 32 -start_number 0 -i ../images/image%d.jpg -crf 15 -vcodec libx264 -f mp4 test7.mp4
