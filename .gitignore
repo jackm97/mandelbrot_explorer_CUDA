@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+mandelbrot_explorer
+
+# Image and Video Files
+*.jpg
+*.avi
+*.mp4
