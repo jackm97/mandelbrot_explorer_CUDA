@@ -101,7 +101,7 @@ int main(int argc, char *argv[]){
 	}
 	
 	else if(strcmp(argv[1],"1") == 0){
-		double zoom, zoom_range[2], anim_length[1];
+		double zoom, zoom_range[2], frame_count[1];
 		int64_t max_iter[1];
 
 		cout << endl << "Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ";
@@ -114,14 +114,14 @@ int main(int argc, char *argv[]){
 			input_check("Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ", 2, zoom_range);
 		}
 
-		cout << endl << "Enter animation length in seconds: ";
-		cin >> anim_length[0];
-		input_check("Enter animation length in seconds >0s: ", 1, anim_length);
-		while (anim_length[0] <= 0){
+		cout << endl << "Enter number of frames to capture (positive integer): ";
+		cin >> frame_count[0];
+		input_check("Enter number of frames to capture (positive integer): ", 1, frame_count);
+		while (frame_count[0] <= 0 || fmod(frame_count[0],int64_t(frame_count[0]))!=0){
 			cout << "You have entered the wrong input" << endl;
-			cout << "Enter animation length in seconds: ";
-			cin >> anim_length[0];
-			input_check("Enter animation length in seconds >0s: ", 1, anim_length);
+			cout << "Enter number of frames to capture (positive integer): ";
+			cin >> frame_count[0];
+			input_check("Enter number of frames to capture (positive integer): ", 1, frame_count);
 		}
 
 		cout << endl << "Enter iterations(positive integer): ";
@@ -135,11 +135,11 @@ int main(int argc, char *argv[]){
 		}
 
 		double zoom_interval;
-		zoom_interval = (log10(zoom_range[1]) - log10(zoom_range[0]))/(32*anim_length[0]);
+		zoom_interval = (log10(zoom_range[1]) - log10(zoom_range[0]))/(frame_count[0]);
 		
 		zoom=zoom_range[0];
 		mandelbrot m(resolution[0], resolution[1], mandelbrot::Point(center[0],center[1]), zoom, max_iter[0]);
-		for (int i=0; i<int(32*anim_length[0]); i++){
+		for (int i=0; i<frame_count[0]; i++){
 			string fname = "image" + to_string(i);
 			m.changeZoom(zoom);
 			mandelbrot::ArrayCV image = m.getImageCV();
