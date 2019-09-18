@@ -3,11 +3,17 @@
 
 #ifndef APPLYITER_H
 #define APPLYITER_H
- 
+
+// Class for running Mandelbrot iteration in parallel
+// within the mandelbrot class
+// 	Example:
+// 	tbb::parallel_for(tbb::blocked_range2d<size_t>(0, height, 0, width), applyIter(values,zr,zi,cr,ci,max_iter));
+//
 class applyIter {
     mandelbrot::Array &values, &zr, &zi, &cr, &ci;
     size_t max_iter;
 public:
+    // Runs the iteration z_n = z_{n-1}^2 + c on each complex point c
     void operator()( const tbb::blocked_range2d<size_t>& r ) const {
         double iters=0,
                R2=1e6,
@@ -19,6 +25,9 @@ public:
                         iters=0;
                         zr2=0;
                         zi2=0;
+
+			// q is used to determine if a point is within the set
+		   	// without needing to iterate to max_iter
 			q = (cr(j,i)-1./4)*(cr(j,i)-1./4) + ci(j,i)*ci(j,i);
 			
 			if (q*(q+(cr(j,i)-1./4)) <= 1./4*ci(j,i)*ci(j,i))
