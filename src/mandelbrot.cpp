@@ -6,7 +6,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, size_t max_iter): 
+mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int max_iter): 
 	height(H), width(W), 
 	center(center), zoom(zoom), max_iter(max_iter), 
 	cr(mandelbrot::Array(height,width)),
@@ -104,7 +104,7 @@ void mandelbrot::calcValues(){
 	values = (values==max_iter).select(0,values);
 	//histColor();
 	
-	double K = 510*20/5000;
+	double K = 510*11/5000;
 	values = ((K*values)-510*(K*values/510).floor());
 	values = (values<=255).select(values,(510-values));
 	
