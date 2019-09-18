@@ -1,5 +1,5 @@
 CC = g++
-CCFLAGS = -fopenmp -march=native -O2
+CCFLAGS = -fopenmp -march=native -msse2 -O2
 LDFLAGS = `pkg-config --cflags --libs opencv`
 INC = -I /usr/include/eigen3
 LIB = -ltbb -lrt

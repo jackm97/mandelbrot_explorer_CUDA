@@ -7,6 +7,9 @@
 
 using namespace std;
 
+// Checks user input to ensure correct program behavior.
+// The string, prompt_str, is shown on the standard output
+// until a valid input is given by the user
 template<class var_type>
 void input_check(string prompt_str, int argc, var_type argv[]);
 
@@ -61,7 +64,7 @@ int main(int argc, char *argv[]){
 		
 	if (strcmp(argv[1],"0") == 0){
 		double zoom[1];
-		int64_t max_iter[1];
+		int max_iter[1];
 		
 		cout << endl <<  "Enter zoom level(maximum of 1e12): ";
 		cin >> zoom[0];
@@ -91,17 +94,17 @@ int main(int argc, char *argv[]){
 		if (supersample[0]=='y' || supersample[0]=='Y')
         		cv::resize(image,image,cv::Size(),.5,.5);
 
-		string fname = "";
-                cv::namedWindow(fname, CV_WINDOW_NORMAL);
-                //cv::setWindowProperty(fname, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
-                cv::imshow(fname,image);
+		string window_name = "Mandelbrot";
+                cv::namedWindow(window_name, CV_WINDOW_NORMAL);
+                cv::imshow(window_name,image);
                 cv::waitKey(0);
                 cv::destroyAllWindows();
 	}
 	
 	else if(strcmp(argv[1],"1") == 0){
 		double zoom, zoom_range[2], frame_count[1];
-		int64_t max_iter[1];
+		int max_iter[1];
+		string image_path[1];
 
 		cout << endl << "Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ";
 		cin >> zoom_range[0] >> zoom_range[1];
@@ -116,7 +119,7 @@ int main(int argc, char *argv[]){
 		cout << endl << "Enter number of frames to capture (positive integer): ";
 		cin >> frame_count[0];
 		input_check("Enter number of frames to capture (positive integer): ", 1, frame_count);
-		while (frame_count[0] <= 0 || fmod(frame_count[0],int64_t(frame_count[0]))!=0){
+		while (frame_count[0] <= 0 || fmod(frame_count[0],int(frame_count[0]))!=0){
 			cout << "You have entered the wrong input" << endl;
 			cout << "Enter number of frames to capture (positive integer): ";
 			cin >> frame_count[0];
@@ -133,6 +136,14 @@ int main(int argc, char *argv[]){
 			input_check("Enter iterations(positive integer): ", 1, max_iter);
 		}
 
+		cout << endl << "Enter file path to save image series: ";
+		cin >> image_path[0];
+		input_check("Enter file path to save image series: ", 1, image_path);
+		if ( image_path[0].back()!='/' && image_path[0].length()!=0 )
+			image_path[0] += "/";
+		
+		// the zoom interval is designed to be exponential (i.e. a zoom interval of
+		// one would have zoom levels of 1e0, 1e1, 1e2, etc.)
 		double zoom_interval;
 		zoom_interval = (log10(zoom_range[1]) - log10(zoom_range[0]))/(frame_count[0]);
 		
@@ -147,8 +158,7 @@ int main(int argc, char *argv[]){
 			if (supersample[0]=='y' || supersample[0]=='Y')
         			cv::resize(image,image,cv::Size(),.5,.5);
 
-                	string save_loc = "../images/";
-			cv::imwrite(save_loc + fname + ".jpg",image);
+			cv::imwrite(image_path[0] + fname + ".jpg",image);
 			zoom*=pow(10,zoom_interval);
 		}
 	}
