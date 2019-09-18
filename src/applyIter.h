@@ -4,13 +4,11 @@
 #ifndef APPLYITER_H
 #define APPLYITER_H
  
-using namespace tbb;
- 
 class applyIter {
     mandelbrot::Array &values, &zr, &zi, &cr, &ci;
     size_t max_iter;
 public:
-    void operator()( const blocked_range2d<size_t>& r ) const {
+    void operator()( const tbb::blocked_range2d<size_t>& r ) const {
         double iters=0,
                R2=1e6,
                zr2=0,

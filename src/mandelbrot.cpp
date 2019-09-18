@@ -4,9 +4,7 @@
 #include "applyIter.h"
 #include <cmath>
 #include <vector>
-
-// hello
-using namespace octane;
+#include <opencv2/opencv.hpp>
 
 mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, size_t max_iter): 
 	height(H), width(W), 
@@ -37,6 +35,7 @@ void mandelbrot::changeMaxIter(size_t new_max_iter){
 }
 
 mandelbrot::ArrayCV mandelbrot::getImageCV(){
+	using namespace octane;
 	if (!isCalc){
 		resetValues();
 		calcValues();
@@ -77,6 +76,7 @@ void mandelbrot::resetValues(){
 
 void mandelbrot::calcValues(){
 	
+	using namespace tbb;
 	parallel_for(blocked_range2d<size_t>(0, height, 0, width), applyIter(values,zr,zi,cr,ci,max_iter));
 	/*double iters=0,
 	       R2=1e6,

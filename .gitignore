@@ -36,3 +36,6 @@ mandelbrot_explorer
 *.jpg
 *.avi
 *.mp4
+
+# Swap Files
+*.swp
