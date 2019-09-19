@@ -59,7 +59,7 @@ int main(int argc, char *argv[]){
 		mandelbrot m(resolution[0], resolution[1], mandelbrot::Point(center[0],center[1]), zoom[0], max_iter[0]);
 		mandelbrot::ArrayCV image = m.getImageCV();
 		
-		cv::applyColorMap(image, image, cv::COLORMAP_TWILIGHT_SHIFTED);
+		cv::applyColorMap(image, image, cv::COLORMAP_BONE);
 		if (supersample[0]=='y' || supersample[0]=='Y')
         		cv::resize(image,image,cv::Size(),.5,.5);
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
 			m.changeZoom(zoom);
 			mandelbrot::ArrayCV image = m.getImageCV();
 
-			cv::applyColorMap(image, image, cv::COLORMAP_TWILIGHT_SHIFTED);
+			cv::applyColorMap(image, image, cv::COLORMAP_BONE);
 			if (supersample[0]=='y' || supersample[0]=='Y')
         			cv::resize(image,image,cv::Size(),.5,.5);
 

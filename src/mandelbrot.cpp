@@ -104,7 +104,7 @@ void mandelbrot::calcValues(){
 	values = (values.array()==max_iter).select(0,values);
 	//histColor();
 	
-	double K = 510*10/5000;
+	double K = 510*20/5000;
 	values = ((K*values).array()-510*(K*values/510).array().floor());
 	values = (values.array()<=255).select(values,(510-values.array()));
 	
