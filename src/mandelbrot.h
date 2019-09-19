@@ -1,7 +1,5 @@
-#define NDEBUG
-
-#include <Eigen/Dense>
 #include <complex>
+#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
 #ifndef MANDELBROT_H

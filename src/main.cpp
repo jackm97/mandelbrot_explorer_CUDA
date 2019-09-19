@@ -1,9 +1,9 @@
-#include "mandelbrot.h"
 #include <string>
 #include <iostream>
-#include <opencv2/opencv.hpp>
 #include <cmath>
 #include <limits>
+#include <opencv2/opencv.hpp>
+#include "mandelbrot.h"
 
 using namespace std;
 

@@ -1,10 +1,10 @@
 #include "mandelbrot.h"
-#include "tbb/tbb.h"
-#include "applyIter.h"
 #include <cmath>
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
+#include "tbb/tbb.h"
+#include "applyIter.h"
 
 mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int max_iter): 
 	height(H), width(W), 
