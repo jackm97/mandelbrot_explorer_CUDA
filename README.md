@@ -36,7 +36,7 @@ To run the program call:
 ```
 ./mandelbrot_explorer arg1
 ```
-`arg1` can take two values `0` to render a single image and `1` to render many images for an animation sequence.
+`arg1` can take on one of two values: `0` to render a single image and `1` to render many images for an animation sequence.
 
 ### Example 1
 ![](./examples/example1.png)
