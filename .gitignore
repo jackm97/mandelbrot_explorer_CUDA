@@ -39,6 +39,3 @@ mandelbrot_explorer
 
 # Swap Files
 *.swp
-
-# Build Files
-./build
