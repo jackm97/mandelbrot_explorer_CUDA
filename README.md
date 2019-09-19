@@ -39,6 +39,7 @@ To run the program call:
 `arg1` can take two values `0` to render a single image and `1` to render many images for an animation sequence.
 
 ### Example 1
+![](./examples/example1.png)
 ```
 $ ./mandelbrot_explorer 0
 Enter resolution, positive integers (e.g. height width): 1080 1920
@@ -51,7 +52,7 @@ Enter zoom level(maximum of 1e12): 1.5
 
 Enter iterations(positive integer): 5000
 ```
-Notice that after the initial program execution, input prompts are displayed in the terminal. These particular inputs would generate a 1080x1920 image centered on the complex coordinate (-1,0) with a zoom of 1.5x. The image would be rendered at double the input resolution(e.g. supersampled) and then resized back to the input resolution using linear interpolation. This is an anti-aliasing method. The maximum number of iterations before a pixel is considered in the set is 5000.
+Notice that after the initial program execution, input prompts are displayed in the terminal. These particular inputs generate a 1080x1920 image centered on the complex coordinate (-1,0) with a zoom of 1.5x. The image would be rendered at double the input resolution(e.g. supersampled) and then resized back to the input resolution using linear interpolation. This is an anti-aliasing method. The maximum number of iterations before a pixel is considered in the set is 5000.
 
 ### Example 2
 ![](./examples/example2.gif)
@@ -71,7 +72,7 @@ Enter iterations(positive integer): 5000
 
 Enter file path to save image series: ../images2
 ```
-Like the single image mode, the series image mode has input prompts. In this case the inputs shown above would produce 1900 frames that range from a zoom of 1 to a zoom of 1e12. Each frame is 1080x1920 and is not supersampled. Again the maximum iterations are set to 5000. The file path for the generated frames is `../images2`.
+Like the single image mode, the series image mode has input prompts. In this case the inputs shown above produce 1900 frames that range from a zoom of 1 to a zoom of 1e12. Each frame is 1080x1920 and is not supersampled. Once again, the maximum iterations are set to 5000. The file path for the generated frames is `../images2`.
 
 ## Authors
 
