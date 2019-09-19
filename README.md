@@ -23,8 +23,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Installing
 ```
-git clone https://github.com/jackm97/mandelbrot_explorer.git
-cd ./mandelbrot_explorer
+git clone https://github.com/jackm97/mandelbrot_viewer.git
+cd ./mandelbrot_viewer
 mkdir build
 cd build
 cmake .. && make
