@@ -7,6 +7,8 @@
 
 using namespace std;
 
+// The following functions handle getting input from the user
+// for the mandelbrot image/animation parameters
 void getResolution(int resolution[]);
 void getCenter(double center[]);
 void getSupersample(char supersample[]);
