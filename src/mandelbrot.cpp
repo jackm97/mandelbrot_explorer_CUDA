@@ -1,10 +1,10 @@
 #include "mandelbrot.h"
-#include "Eigen2CV.h"
 #include "tbb/tbb.h"
 #include "applyIter.h"
 #include <cmath>
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/eigen.hpp>
 
 mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int max_iter): 
 	height(H), width(W), 
@@ -35,11 +35,11 @@ void mandelbrot::changeMaxIter(size_t new_max_iter){
 }
 
 mandelbrot::ArrayCV mandelbrot::getImageCV(){
-	using namespace octane;
 	if (!isCalc){
 		resetValues();
 		calcValues();
-		cv::transpose(eigen2cv(values.template cast<uint8_t>()),image);
+		cv::eigen2cv(values,image);
+		image.convertTo(image,CV_8UC1);
 		isCalc=true;
 	}
 
@@ -101,18 +101,18 @@ void mandelbrot::calcValues(){
 	}*/
 	
 	smoothColor();
-	values = (values==max_iter).select(0,values);
+	values = (values.array()==max_iter).select(0,values);
 	//histColor();
 	
-	double K = 510*11/5000;
-	values = ((K*values)-510*(K*values/510).floor());
-	values = (values<=255).select(values,(510-values));
+	double K = 510*10/5000;
+	values = ((K*values).array()-510*(K*values/510).array().floor());
+	values = (values.array()<=255).select(values,(510-values.array()));
 	
 	/*double min,max;
 	min = values.minCoeff();
 	max = values.maxCoeff();
 	values = (values!=0).select(255*(values-min)/(max-min),0);*/
-	values = values.round();	
+	values = values.array().round();	
 }
 
 void mandelbrot::smoothColor(){
