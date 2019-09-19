@@ -39,7 +39,8 @@ To run the program call:
 `arg1` can take on one of two values: `0` to render a single image and `1` to render many images for an animation sequence.
 
 ### Example 1
-![](./examples/example1.png)
+<img src="./examples/example1.png" alt="drawing" width="640" height="360"/>
+
 ```
 $ ./mandelbrot_explorer 0
 Enter resolution, positive integers (e.g. height width): 1080 1920
@@ -55,7 +56,8 @@ Enter iterations(positive integer): 5000
 Notice that after the initial program execution, input prompts are displayed in the terminal. These particular inputs generate a 1080x1920 image centered on the complex coordinate (-1,0) with a zoom of 1.5x. The image is rendered at double the input resolution(e.g. supersampled) and then resized back to the input resolution using linear interpolation. This is an anti-aliasing method. The maximum number of iterations before a pixel is considered in the set is 5000.
 
 ### Example 2
-![](./examples/example2.gif)
+<img src="./examples/example2.gif" alt="drawing" width="640" height="360"/>
+
 ```
 $ ./mandelbrot_explorer 1
 Enter resolution, positive integers (e.g. height width): 1080 1920
