@@ -54,6 +54,7 @@ Enter iterations(positive integer): 5000
 Notice that after the initial program execution, input prompts are displayed in the terminal. These particular inputs would generate a 1080x1920 image centered on the complex coordinate (-1,0) with a zoom of 1.5x. The image would be rendered at double the input resolution(e.g. supersampled) and then resized back to the input resolution using linear interpolation. This is an anti-aliasing method. The maximum number of iterations before a pixel is considered in the set is 5000.
 
 ### Example 2
+![](./examples/example2.gif)
 ```
 $ ./mandelbrot_explorer 1
 Enter resolution, positive integers (e.g. height width): 1080 1920
