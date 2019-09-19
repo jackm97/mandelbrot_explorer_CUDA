@@ -19,7 +19,7 @@ These instructions will get you a copy of the project up and running on your loc
 - GCC 8.3+
 - cmake 3.13+
 
-**NOTE: I have only tested this on Ubuntu 19.04 with the versions of software shown above. I do believe this should work on Windows as well but I haven't checked. Additionally, lower verisons of the software listed above might work, but I havn't checked that either.**
+**NOTE: Lower versions of OpenCV will likely work, however it is recommended to use 3.4.6+ so that the user has access to more colormaps. Lower versions of GCC and cmake will also likely work, however, it hasn't been tested. If you want to try a different version of cmake, make sure to edit the CMakeLists.txt to allow for earlier versions.**
 
 ### Installing
 ```
