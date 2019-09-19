@@ -11,7 +11,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 - OpenCV 3.4.6+:
-  - [Ubuntu Install](https://docs.opencv.org/4.1.1/d7/d9f/tutorial_linux_install.html)
+  - [Linux Install](https://docs.opencv.org/4.1.1/d7/d9f/tutorial_linux_install.html)
   - [Windows Install](https://www.learnopencv.com/install-opencv-4-on-windows/)
 - Intel's Threading Building Blocks Library:
   - [Source Code](https://github.com/intel/tbb)
