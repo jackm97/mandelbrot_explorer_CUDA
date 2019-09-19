@@ -74,6 +74,12 @@ Enter file path to save image series: ../images2
 ```
 Like the single image mode, the series image mode has input prompts. In this case the inputs shown above produce 1900 frames that range from a zoom of 1 to a zoom of 1e12. Each frame is 1080x1920 and is not supersampled. Once again, the maximum iterations are set to 5000. The file path for the generated frames is `../images2`.
 
+To stitch the images into one mp4 file you could use a program like ffmpeg:
+```
+ffmpeg -r 60 -start_number 0 -i ../images2/image%d.jpg -crf 30 -vcodec libx264 -f mp4 /path/to/animation/animation.mp4
+```
+The above example generates a 60fps animation.
+
 ## Authors
 
 * **Jack Myers* - *Initial work* - [jackm97](https://github.com/jackm97)
