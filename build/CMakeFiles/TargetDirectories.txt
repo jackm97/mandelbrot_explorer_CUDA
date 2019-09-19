@@ -1,3 +1,0 @@
-/home/jack/mandelbrot_viewer/build/CMakeFiles/rebuild_cache.dir
-/home/jack/mandelbrot_viewer/build/CMakeFiles/mandelbrot_explorer.dir
-/home/jack/mandelbrot_viewer/build/CMakeFiles/edit_cache.dir
