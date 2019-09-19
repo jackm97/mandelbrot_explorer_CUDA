@@ -12,7 +12,7 @@ all: main.o mandelbrot.o
 main.o: main.cpp mandelbrot.h
 	$(CC) $(CCFLAGS) $(INC) -c main.cpp -o main.o $(LDFLAGS) 
 
-mandelbrot.o: mandelbrot.cpp mandelbrot.h applyIter.h Eigen2CV.h
+mandelbrot.o: mandelbrot.cpp mandelbrot.h applyIter.h
 	$(CC) $(CCFLAGS) $(INC) -c mandelbrot.cpp -o mandelbrot.o $(LDFLAGS)
 
 clean:
