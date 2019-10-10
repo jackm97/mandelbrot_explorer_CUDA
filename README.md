@@ -82,6 +82,11 @@ ffmpeg -r 60 -start_number 0 -i ../images2/image%d.jpg -crf 30 -vcodec libx264 -
 ```
 The above example generates a 60fps animation.
 
+## Limitations/ Future Improvements
+- Right now the zoom level is limited by the floating-point precision of the machine that the program is running on. I'd like to introduce the GMP library for arbitrary-precision
+- Interior checking currently only identifies points within the cardioid or period-2 bulb. I'd like to implement more interior checking algorithms such as periodicity checking
+- An [exponential map](https://mrob.com/pub/muency/exponentialmap.html) has the potential to speed up deep zooms by avoiding rendering points twice
+
 ## Authors
 
 * **Jack Myers* - *Initial work* - [jackm97](https://github.com/jackm97)
