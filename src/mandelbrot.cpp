@@ -78,13 +78,13 @@ void mandelbrot::calcValues(){
 	
 	using namespace tbb;
 	applyIter parallel_object = applyIter(values,zr,zi,cr,ci,max_iter);
-	parallel_for(blocked_range2d<size_t>(0, height, 0, width), applyIter(values,zr,zi,cr,ci,max_iter));
+	parallel_for(blocked_range2d<size_t>(0, height, 0, width), parallel_object);
 	smoothColor();
 	values = (values.array()==max_iter).select(0,values);
 	
-	double period = 510;
-	double period_per_iter = 20/5000;
-	double K = period*period_per_iter;
+	double period_per_iter = 510./5000;
+	double periods = 20;
+	double K = periods*period_per_iter;
 	values = ((K*values).array()-510*(K*values/510).array().floor());
 	values = (values.array()<=255).select(values,(510-values.array()));
 	values = values.array().round();	
