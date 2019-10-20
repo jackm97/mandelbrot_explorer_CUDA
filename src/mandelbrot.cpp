@@ -77,41 +77,16 @@ void mandelbrot::resetValues(){
 void mandelbrot::calcValues(){
 	
 	using namespace tbb;
+	applyIter parallel_object = applyIter(values,zr,zi,cr,ci,max_iter);
 	parallel_for(blocked_range2d<size_t>(0, height, 0, width), applyIter(values,zr,zi,cr,ci,max_iter));
-	/*double iters=0,
-	       R2=1e6,
-	       zr2=0,
-	       zi2=0;
-	
-	for (int i=0; i<width; i++){
-                for (int j=0; j<height; j++){
-			iters=0;
-			zr2=0;
-			zi2=0;
-			while((zr2+zi2<=R2) && (iters<max_iter)){
-				zi(j,i) = zi(j,i) * zr(j,i);
-				zi(j,i) = zi(j,i) + zi(j,i) + ci(j,i);
-				zr(j,i) = zr2 - zi2 + cr(j,i);
-				zr2 = zr(j,i) * zr(j,i);
-				zi2 = zi(j,i) * zi(j,i);
-				iters++;
-			}
-			values(j,i) = iters;
-		}
-	}*/
-	
 	smoothColor();
 	values = (values.array()==max_iter).select(0,values);
-	//histColor();
 	
-	double K = 510*20/5000;
+	double period = 510;
+	double period_per_iter = 20/5000;
+	double K = period*period_per_iter;
 	values = ((K*values).array()-510*(K*values/510).array().floor());
 	values = (values.array()<=255).select(values,(510-values.array()));
-	
-	/*double min,max;
-	min = values.minCoeff();
-	max = values.maxCoeff();
-	values = (values!=0).select(255*(values-min)/(max-min),0);*/
 	values = values.array().round();	
 }
 
@@ -126,40 +101,6 @@ void mandelbrot::smoothColor(){
 				nu = std::log(log_z/std::log(2))/std::log(2);
 				values(j,i) = values(j,i) + 1 - nu;
 			}
-		}
-	}
-}
-
-void mandelbrot::histColor(){
-	mandelbrot::Array histogram = mandelbrot::Array::Zero(max_iter, 1);
-	
-	double m;
-	for (int i=0; i<width; i++){
-                for (int j=0; j<height; j++){
-			m = values(j,i);
-			if (m<max_iter)
-				histogram(floor(m)) += 1;
-		}
-	}
-
-	double total = histogram.sum();
-	std::vector<double> hues;
-	double h = 0;
-	for (int i=0; i<max_iter; i++){
-		h += histogram(i)/total;
-		hues.push_back(h);
-	}
-	hues.push_back(h);
-
-	for (int i=0; i<width; i++){
-                for (int j=0; j<height; j++){
-			m = values(j,i);
-			double lerp = hues[floor(m)]*(1-fmod(m,1)) + hues[ceil(m)]*fmod(m,1);
-			uint64_t hue = uint64_t(max_iter*lerp);
-			if (m<max_iter)
-				values(j,i) = hue;
-			else 
-				values(j,i) = 0;
 		}
 	}
 }	

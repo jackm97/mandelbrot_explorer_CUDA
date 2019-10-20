@@ -78,9 +78,6 @@ class mandelbrot{
 		
 		// Avoids prominent color bands in rendered images
 		void smoothColor();
-		
-		// Evenly distributes pixel values in rendered images
-		void histColor();
 };
 
 #endif
