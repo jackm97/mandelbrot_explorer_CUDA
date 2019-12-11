@@ -41,4 +41,4 @@ mandelbrot_explorer
 *.swp
 
 # Build Folder
-./build/*
+build/*
