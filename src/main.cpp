@@ -105,12 +105,6 @@ int main(int argc, char *argv[]){
 	return 0;
 }
 
-
-
-
-
-
-
 void getResolution(int resolution[]){
         cout << "Enter resolution, positive integers (e.g. height width): ";
         cin >> resolution[0] >> resolution[1];

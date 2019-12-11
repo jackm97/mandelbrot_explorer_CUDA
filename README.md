@@ -10,16 +10,17 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-- OpenCV 3.4.6+:
+- OpenCV 4.1:
   - [Linux Install](https://docs.opencv.org/4.1.1/d7/d9f/tutorial_linux_install.html)
   - [Windows Install](https://www.learnopencv.com/install-opencv-4-on-windows/)
 - Intel's Threading Building Blocks Library:
   - [Source Code](https://github.com/intel/tbb)
   - [Setup Environment Variables](https://software.intel.com/en-us/node/505529)
+  - If tbb isn't detected, cmake will download source code and install it in the build directory
 - GCC 8.3+
 - cmake 3.13+
 
-**NOTE: Lower versions of OpenCV will likely work, however it is recommended to use 3.4.6+ so that the user has access to more colormaps. Lower versions of GCC and cmake will also likely work, however, it hasn't been tested. If you want to try a different version of cmake, make sure to edit the CMakeLists.txt to allow for earlier versions.**
+**NOTE: Lower versions of OpenCV will likely work, however it is recommended to use 4.1+ so that the user has access to all the most current colormaps. Lower versions of GCC and cmake will also likely work, however, it hasn't been tested. If you want to try a different version of cmake, make sure to edit the CMakeLists.txt to allow for earlier versions.**
 
 ### Installing
 ```
