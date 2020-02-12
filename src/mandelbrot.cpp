@@ -3,8 +3,8 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
-#include "tbb/tbb.h"
-#include "applyIter.h"
+//#include "tbb/tbb.h"
+#include "applyIterGPU.h"
 
 mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int max_iter): 
 	height(H), width(W), 
@@ -76,9 +76,11 @@ void mandelbrot::resetValues(){
 
 void mandelbrot::calcValues(){
 	
-	using namespace tbb;
-	applyIter parallel_object = applyIter(values,zr,zi,cr,ci,max_iter);
-	parallel_for(blocked_range2d<size_t>(0, height, 0, width), parallel_object);
+	//using namespace tbb;
+	applyIterGPU parallel_object = applyIterGPU((double*)values.data(),(double*)zr.data(),(double*)zi.data(),(double*)cr.data(),(double*)ci.data(),(size_t)max_iter);
+	//parallel_for(blocked_range2d<size_t>(0, height, 0, width), parallel_object);
+  parallel_object.GPU_PAR_FOR(height, width);
+  
 	smoothColor();
 	values = (values.array()==max_iter).select(0,values);
 	
