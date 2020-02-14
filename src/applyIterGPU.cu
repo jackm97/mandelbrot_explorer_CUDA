@@ -33,8 +33,8 @@ void GPU_PAR_FOR_HELPER(int height, int width,double* values, double* zr, double
         zi[i*width+j] = zi[i*width+j] * zr[i*width+j];
         zi[i*width+j] = zi[i*width+j] + zi[i*width+j] + ci[i*width+j];
         zr[i*width+j] = zr2 - zi2 + cr[i*width+j];
-        zr2 = zr[i*width+j] * zr[i*width+j];
-        zi2 = zi[i*width+j] * zi[i*width+j]; 
+        zr2 = zr[i*width+j]* zr[i*width+j];
+        zi2 = zi[i*width+j]* zi[i*width+j]; 
         iters++;
       }
       values[i*width+j] = iters;
@@ -44,16 +44,38 @@ void GPU_PAR_FOR_HELPER(int height, int width,double* values, double* zr, double
 
 void applyIterGPU::GPU_PAR_FOR(int height, int width)
 {
+  double *GPUvalues, *GPUzr, *GPUzi, *GPUcr, *GPUci;
+  
+  cudaMalloc(&GPUvalues, height*width*sizeof(double));
+  cudaMemcpy(GPUvalues, values, height*width*sizeof(double),cudaMemcpyHostToDevice);
+  
+  cudaMalloc(&GPUzr, height*width*sizeof(double));
+  cudaMemcpy(GPUzr, zr, height*width*sizeof(double),cudaMemcpyHostToDevice);
+  
+  cudaMalloc(&GPUzi, height*width*sizeof(double));
+  cudaMemcpy(GPUzi, zi, height*width*sizeof(double),cudaMemcpyHostToDevice);
+  
+  cudaMalloc(&GPUcr, height*width*sizeof(double));
+  cudaMemcpy(GPUcr, cr, height*width*sizeof(double),cudaMemcpyHostToDevice);
+  
+  cudaMalloc(&GPUci, height*width*sizeof(double));
+  cudaMemcpy(GPUci, ci, height*width*sizeof(double),cudaMemcpyHostToDevice);
 
-  cudaMallocManaged(&values, height*width*sizeof(double));
-  cudaMallocManaged(&zr, height*width*sizeof(double));
-  cudaMallocManaged(&zi, height*width*sizeof(double));
-  cudaMallocManaged(&cr, height*width*sizeof(double));
-  cudaMallocManaged(&ci, height*width*sizeof(double));
+  GPU_PAR_FOR_HELPER<<<1, 1024>>>(height, width, GPUvalues, GPUzr, GPUzi, GPUcr, GPUci, max_iter);
 
-  GPU_PAR_FOR_HELPER<<<1, 1024>>>(height, width, values, zr, zi, cr, ci, max_iter);
+  cudaMemcpy(values, GPUvalues, height*width*sizeof(double),cudaMemcpyDeviceToHost);
+  cudaMemcpy(zr, GPUzr, height*width*sizeof(double),cudaMemcpyDeviceToHost);
+  cudaMemcpy(zi, GPUzi, height*width*sizeof(double),cudaMemcpyDeviceToHost);
+  cudaMemcpy(cr, GPUcr, height*width*sizeof(double),cudaMemcpyDeviceToHost);
+  cudaMemcpy(ci, GPUci, height*width*sizeof(double),cudaMemcpyDeviceToHost);
 
   // Wait for GPU to finish before accessing on host
   cudaDeviceSynchronize();
+
+  cudaFree(GPUvalues);
+  cudaFree(GPUzr);
+  cudaFree(GPUzi);
+  cudaFree(GPUcr);
+  cudaFree(GPUci);
 }
 
