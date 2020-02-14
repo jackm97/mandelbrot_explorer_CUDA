@@ -9,36 +9,28 @@ void GPU_PAR_FOR_HELPER(int height, int width,double* values, double* zr, double
          zi2=0,
          q;
    
-  int index = threadIdx.x;
-  int stride = blockDim.x;
-
-  for (int j=index; j<width; j+=stride)
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
+  
+  if (i<height*width)
   {
-    for (int i=0; i<height; i++)
-    {
-      iters=0;
-      zr2=0;
-      zi2=0;
- 
-      // q is used to determine if a point is within the set
-      // without needing to iterate to max_iter
-      q = (cr[i*width+j]-1./4)*(cr[i*width+j]-1./4) + ci[i*width+j]*ci[i*width+j];
+    // q is used to determine if a point is within the set
+    // without needing to iterate to max_iter
+    q = (cr[i]-1./4)*(cr[i]-1./4) + ci[i]*ci[i];
 
-      if (q*(q+(cr[i*width+j]-1./4)) <= 1./4*ci[i*width+j]*ci[i*width+j])
-        iters=max_iter;
-      else if ((cr[i*width+j]+1)*(cr[i*width+j]+1) + ci[i*width+j]*ci[i*width+j] <= 1./16)
-        iters=max_iter;
-      while((zr2+zi2<=R2) && (iters<max_iter))
-      {
-        zi[i*width+j] = zi[i*width+j] * zr[i*width+j];
-        zi[i*width+j] = zi[i*width+j] + zi[i*width+j] + ci[i*width+j];
-        zr[i*width+j] = zr2 - zi2 + cr[i*width+j];
-        zr2 = zr[i*width+j]* zr[i*width+j];
-        zi2 = zi[i*width+j]* zi[i*width+j]; 
-        iters++;
-      }
-      values[i*width+j] = iters;
+    if (q*(q+(cr[i]-1./4)) <= 1./4*ci[i]*ci[i])
+      iters=max_iter;
+    else if ((cr[i]+1)*(cr[i]+1) + ci[i]*ci[i] <= 1./16)
+      iters=max_iter;
+    while((zr2+zi2<=R2) && (iters<max_iter))
+    {
+      zi[i] = zi[i] * zr[i];
+      zi[i] = zi[i] + zi[i] + ci[i];
+      zr[i] = zr2 - zi2 + cr[i];
+      zr2 = zr[i]* zr[i];
+      zi2 = zi[i]* zi[i]; 
+      iters++;
     }
+    values[i] = iters;
   }
 }
 
@@ -61,7 +53,7 @@ void applyIterGPU::GPU_PAR_FOR(int height, int width)
   cudaMalloc(&GPUci, height*width*sizeof(double));
   cudaMemcpy(GPUci, ci, height*width*sizeof(double),cudaMemcpyHostToDevice);
 
-  GPU_PAR_FOR_HELPER<<<1, 1024>>>(height, width, GPUvalues, GPUzr, GPUzi, GPUcr, GPUci, max_iter);
+  GPU_PAR_FOR_HELPER<<<((height*width)+255)/256, 256>>>(height, width, GPUvalues, GPUzr, GPUzi, GPUcr, GPUci, max_iter);
 
   cudaMemcpy(values, GPUvalues, height*width*sizeof(double),cudaMemcpyDeviceToHost);
   cudaMemcpy(zr, GPUzr, height*width*sizeof(double),cudaMemcpyDeviceToHost);
