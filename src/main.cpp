@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
+#include <chrono>
 #include <opencv2/opencv.hpp>
 #include "mandelbrot.h"
 
@@ -57,7 +58,10 @@ int main(int argc, char *argv[]){
 		getMaxIter(max_iter);
 
 		mandelbrot m(resolution[0], resolution[1], mandelbrot::Point(center[0],center[1]), zoom[0], max_iter[0]);
+    chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 		mandelbrot::ArrayCV image = m.getImageCV();
+    auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start ).count();
+    cout << "\nThis took " << duration/1.0e6 << "s to calculate image." << endl;
 		
 		cv::applyColorMap(image, image, cv::COLORMAP_BONE);
 		if (supersample[0]=='y' || supersample[0]=='Y')
