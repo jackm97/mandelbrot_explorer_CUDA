@@ -1,6 +1,7 @@
 #include <complex>
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
+#include "applyIterGPU.h"
 
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
@@ -57,13 +58,15 @@ class mandelbrot{
 		mandelbrot::Point center;
 		double zoom;
 		int max_iter;
+
+    applyIterGPU GPU_object;
 		
 		bool isCalc=false;
 		
-		mandelbrot::Array cr;
+		/*mandelbrot::Array cr;
 		mandelbrot::Array ci;
 		mandelbrot::Array zr;
-		mandelbrot::Array zi;
+		mandelbrot::Array zi;*/
 		
 		mandelbrot::Array values;
 		mandelbrot::ArrayCV image;
@@ -77,7 +80,7 @@ class mandelbrot{
 		void calcValues();
 		
 		// Avoids prominent color bands in rendered images
-		void smoothColor();
+		//void smoothColor();
 };
 
 #endif

@@ -3,18 +3,17 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
-//#include "tbb/tbb.h"
-#include "applyIterGPU.h"
 
 mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int max_iter): 
 	height(H), width(W), 
 	center(center), zoom(zoom), max_iter(max_iter), 
-	cr(mandelbrot::Array(height,width)),
-	ci(mandelbrot::Array(height,width)),
-	zr(mandelbrot::Array(height,width)),
-	zi(mandelbrot::Array(height,width)),
+	//cr(mandelbrot::Array(height,width)),
+	//ci(mandelbrot::Array(height,width)),
+	//zr(mandelbrot::Array(height,width)),
+	//zi(mandelbrot::Array(height,width)),
 	values(mandelbrot::Array(height,width)),
-	image(mandelbrot::ArrayCV(height,width,CV_8UC1))
+	image(mandelbrot::ArrayCV(height,width,CV_8UC1)),
+  GPU_object(applyIterGPU(height,width,max_iter))
 {
 	resetValues();
 }
@@ -31,6 +30,7 @@ void mandelbrot::changeZoom(double new_zoom){
 
 void mandelbrot::changeMaxIter(size_t new_max_iter){
 	max_iter = new_max_iter;
+  GPU_object.setMaxIter(max_iter);
 	isCalc = false;
 }
 
@@ -47,41 +47,16 @@ mandelbrot::ArrayCV mandelbrot::getImageCV(){
 }
 
 void mandelbrot::resetValues(){	
-	double aspect_ratio = double(width)/height;
-	double x_range, y_range, xmin, ymin, intervalx, intervaly;
-	if (aspect_ratio<1){
-		x_range = 4/zoom;
-		y_range = (1/aspect_ratio)*4/zoom;
-	}
-	else{
-		x_range = (aspect_ratio)*4/zoom;
-		y_range = 4/zoom;
-	}
-	xmin = center.real() - x_range/2;
-	ymin = center.imag() - y_range/2;
-	intervalx = x_range/width;
-	intervaly = y_range/height;
-
-	for (int i=0; i<width; i++){
-		for (int j=0; j<height; j++){
-			mandelbrot::Point point(xmin + i*intervalx, ymin + j*intervaly);
-			cr(j,i) = point.real();
-			ci(j,i) = point.imag();
-			zr(j,i) = 0;
-			zi(j,i) = 0;
-			values(j,i) = 0;
-		}
-	}
+  GPU_object.SET_COORD_VALS(center.real(),center.imag(),zoom);	
 }
 
 void mandelbrot::calcValues(){
 	
-	//using namespace tbb;
-	applyIterGPU parallel_object = applyIterGPU((double*)values.data(),(double*)zr.data(),(double*)zi.data(),(double*)cr.data(),(double*)ci.data(),(size_t)max_iter);
-	//parallel_for(blocked_range2d<size_t>(0, height, 0, width), parallel_object);
-  parallel_object.GPU_PAR_FOR(height, width);
+	GPU_object.GPU_PAR_FOR();
+  double* values_pointer = values.data();
+  GPU_object.copyValues(values_pointer);
   
-	smoothColor();
+	//smoothColor();
 	values = (values.array()==max_iter).select(0,values);
 	
 	double period_per_iter = 510./5000;
@@ -92,7 +67,7 @@ void mandelbrot::calcValues(){
 	values = values.array().round();	
 }
 
-void mandelbrot::smoothColor(){
+/*void mandelbrot::smoothColor(){
 	double z2, log_z, nu;
 
 	for (int i=0; i<width; i++){
@@ -105,4 +80,4 @@ void mandelbrot::smoothColor(){
 			}
 		}
 	}
-}	
+}	*/

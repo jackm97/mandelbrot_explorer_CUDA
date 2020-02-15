@@ -6,18 +6,22 @@
 class applyIterGPU {
     double *values, *zr, *zi, *cr, *ci;
     size_t max_iter;
+    int height, width;
 public:  
   
-  void GPU_PAR_FOR(int height, int width);
+  void GPU_PAR_FOR();
+
+  void SET_COORD_VALS(double centerx, double centery, double zoom);
+
+  void copyValues(double* target);
+  
+  void setMaxIter(size_t max_iter){this->max_iter=max_iter;}
+
+  applyIterGPU(){}
  
-  applyIterGPU( double* values, double* zr, double* zi, double* cr, double* ci, size_t max_iter) :
-      values(values),
-    	zr(zr),
-	    zi(zi),
-	    cr(cr),
-	    ci(ci),
-	    max_iter(max_iter)
-      {}
+  applyIterGPU( int height, int width, size_t max_iter);
+
+  ~applyIterGPU();
 };
 
 #endif
