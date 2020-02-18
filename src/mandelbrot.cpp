@@ -53,7 +53,7 @@ void mandelbrot::resetValues(){
 void mandelbrot::calcValues(){
 	
 	GPU_object.GPU_PAR_FOR();
-  double* values_pointer = values.data();
+  float* values_pointer = values.data();
   GPU_object.copyValues(values_pointer);
   
 	//smoothColor();

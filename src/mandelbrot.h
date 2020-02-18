@@ -20,8 +20,8 @@
 //
 class mandelbrot{
 	public:
-		typedef std::complex<double> Point;
-		typedef Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> Array;
+		typedef std::complex<float> Point;
+		typedef Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic> Array;
 		typedef cv::Mat ArrayCV; 
 		
 		// Constructor:
