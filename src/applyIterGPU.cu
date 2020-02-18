@@ -35,11 +35,19 @@ void GPU_PAR_FOR_HELPER(int height, int width,float* values, float centerx, floa
          zi2=0;
    
   int idx = blockIdx.x*blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
   
-  if (idx<height*width)
+  for (int k=idx; k < height*width; k+=stride)
   {
-    float i = floorf(idx/height);
-    float j = idx - height*i;
+    iters=0;
+    zr=0;
+    zi=0;
+    cr=0;
+    ci=0;
+    zr2=0;
+    zi2=0;
+    float i = k/height;
+    float j = k - height*i;
     calcPoint(cr,ci,centerx,centery,zoom,width,height,i,j);
     while((zr2+zi2<=R2) && (iters<max_iter))
     {
@@ -50,7 +58,7 @@ void GPU_PAR_FOR_HELPER(int height, int width,float* values, float centerx, floa
       zi2 = zi* zi; 
       iters++;
     }
-    values[idx] = iters;
+    values[k] = iters;
   }
 }
 
@@ -87,7 +95,7 @@ void applyIterGPU::SET_COORD_VALS(float centerx, float centery, float zoom)
 void applyIterGPU::GPU_PAR_FOR()
 {  
 
-  GPU_PAR_FOR_HELPER<<<((height*width)+255)/256, 256>>>(height, width, values, centerx, centery, zoom, max_iter);
+  GPU_PAR_FOR_HELPER<<<88, 256>>>(height, width, values, centerx, centery, zoom, max_iter);
 
   // Wait for GPU to finish before accessing on host
   cudaDeviceSynchronize();
