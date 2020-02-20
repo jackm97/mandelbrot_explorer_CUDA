@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
-#include <chrono>
+#include <string>
 #include <opencv2/opencv.hpp>
 #include "mandelbrot.h"
 
@@ -11,10 +11,10 @@ using namespace std;
 // The following functions handle getting input from the user
 // for the mandelbrot image/animation parameters
 void getResolution(int resolution[]);
-void getCenter(double center[]);
+void getCenter(string center[]);
 void getSupersample(char supersample[]);
 void getMaxIter(int max_iter[]);
-void getZoom(double zoom[]);
+void getZoom(string zoom[]);
 void getZoomRange(double zoom_range[]);
 void getFrameCount(int frame_count[]);
 void getImagePath(string image_path[]);
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
 	}
 
 	int resolution[2];
-	double center[2];
+	string center[2];
 	char supersample[1];
 	getResolution(resolution);
 	getCenter(center);
@@ -52,16 +52,13 @@ int main(int argc, char *argv[]){
 
 	// If the user wants a single image	
 	if (strcmp(argv[1],"0") == 0){
-		double zoom[1];
+		string zoom[1];
 		int max_iter[1];
 		getZoom(zoom);
 		getMaxIter(max_iter);
 
-		mandelbrot m(resolution[0], resolution[1], mandelbrot::Point(center[0],center[1]), zoom[0], max_iter[0]);
-    chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+		mandelbrot m(resolution[0], resolution[1], center, zoom[0], max_iter[0]);
 		mandelbrot::ArrayCV image = m.getImageCV();
-    auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start ).count();
-    cout << "\nThis took " << duration/1.0e6 << "s to calculate image." << endl;
 		
 		cv::applyColorMap(image, image, cv::COLORMAP_BONE);
 		if (supersample[0]=='y' || supersample[0]=='Y')
@@ -74,7 +71,8 @@ int main(int argc, char *argv[]){
                 cv::waitKey(0);
                 cv::destroyAllWindows();
 	}
-	
+
+/*	
 	// If the user wants a series of images to create a zoom animation
 	else if(strcmp(argv[1],"1") == 0){
 		double zoom, zoom_range[2];
@@ -105,7 +103,7 @@ int main(int argc, char *argv[]){
 			zoom*=pow(10,zoom_interval);
 		}
 	}
-
+*/
 	return 0;
 }
 
@@ -121,7 +119,7 @@ void getResolution(int resolution[]){
         }
 }
 
-void getCenter(double center[]){
+void getCenter(string center[]){
         cout << endl << "Enter center point (e.g. x y): ";
         cin >> center[0] >> center[1];
         input_check("Enter center point (e.g. x y): ", 2, center);
@@ -151,16 +149,16 @@ void getMaxIter(int max_iter[]){
                 }
 }
 
-void getZoom(double zoom[]){
+void getZoom(string zoom[]){
                 cout << endl <<  "Enter zoom level(maximum of 1e12): ";
                 cin >> zoom[0];
                 input_check("Enter zoom level(maximum of 1e12): ", 1, zoom);
-                while (zoom[0] > 1e12 || zoom[0] <= 0){
+                /*while (zoom[0] > 1e12 || zoom[0] <= 0){
                         cout << "You have entered the wrong input" << endl;
                         cout << "Enter zoom level(maximum of 1e12): ";
                         cin >> zoom[0];
                         input_check("Enter zoom level(maximum of 1e12): ", 1, zoom);
-                }
+                }*/
 }
 
 void getZoomRange(double zoom_range[]){

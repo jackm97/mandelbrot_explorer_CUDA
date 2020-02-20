@@ -1,12 +1,13 @@
 #include "mandelbrot.h"
 #include <cmath>
 #include <vector>
+#include <string>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 
-mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int max_iter): 
+mandelbrot::mandelbrot(int H, int W, std::string center[], std::string zoom, int max_iter): 
 	height(H), width(W), 
-	center(center), zoom(zoom), max_iter(max_iter), 
+  zoom(zoom), max_iter(max_iter), 
 	//cr(mandelbrot::Array(height,width)),
 	//ci(mandelbrot::Array(height,width)),
 	//zr(mandelbrot::Array(height,width)),
@@ -15,17 +16,19 @@ mandelbrot::mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int 
 	image(mandelbrot::ArrayCV(height,width,CV_8UC1)),
   GPU_object(applyIterGPU(height,width,max_iter))
 {
+  centerx = center[0];
+  centery = center[1];
 	resetValues();
 }
 
-void mandelbrot::changeCenter(mandelbrot::Point new_center){
-	center = new_center;
-	isCalc = false;
+void mandelbrot::changeCenter(std::string new_center[]){
+	//center = new_center;
+	//isCalc = false;
 }
 
-void mandelbrot::changeZoom(double new_zoom){
-	zoom = new_zoom;
-	isCalc = false;
+void mandelbrot::changeZoom(std::string new_zoom){
+	//zoom = new_zoom;
+	//isCalc = false;
 }
 
 void mandelbrot::changeMaxIter(size_t new_max_iter){
@@ -47,7 +50,7 @@ mandelbrot::ArrayCV mandelbrot::getImageCV(){
 }
 
 void mandelbrot::resetValues(){	
-  GPU_object.SET_COORD_VALS(center.real(),center.imag(),zoom);	
+  GPU_object.SET_COORD_VALS(centerx,centery,zoom);	
 }
 
 void mandelbrot::calcValues(){
