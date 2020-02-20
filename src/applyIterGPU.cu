@@ -32,7 +32,8 @@ void GPU_PAR_FOR_HELPER(int height, int width,float* values, float centerx, floa
          cr=0,
          ci=0,
          zr2=0,
-         zi2=0;
+         zi2=0,
+         q;
    
   int idx = blockIdx.x*blockDim.x + threadIdx.x;
   
@@ -45,9 +46,19 @@ void GPU_PAR_FOR_HELPER(int height, int width,float* values, float centerx, floa
     ci=0;
     zr2=0;
     zi2=0;
+    
     float i = idx/height;
     float j = idx - height*i;
     calcPoint(cr,ci,centerx,centery,zoom,width,height,i,j);
+    
+    // q is used to determine if a point is within the set
+    // without needing to iterate to max_iter
+    q = (cr-1./4)*(cr-1./4) + ci*ci;
+
+    if (q*(q+(cr-1./4)) <= 1./4*ci*ci)
+      iters=max_iter;
+    else if ((cr+1)*(cr+1) + ci*ci <= 1./16)
+      iters=max_iter;
     
     while((zr2+zi2<=R2) && (iters<max_iter))
     {
