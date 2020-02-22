@@ -1,11 +1,12 @@
 #include "applyIterGPU.h"
 #include "multi_prec/multi_prec_certif.h"
 
+template<int prec>
 __device__
-void calcPoint(multi_prec<2>& cr, multi_prec<2>& ci, multi_prec<2>& centerx, multi_prec<2>& centery, multi_prec<2>& zoom, int& width, int& height, float& i, float& j)
+void calcPoint(multi_prec<prec>& cr, multi_prec<prec>& ci, multi_prec<prec>& centerx, multi_prec<prec>& centery, multi_prec<prec>& zoom, int& width, int& height, float& i, float& j)
 {
   float aspect_ratio = float(width)/height;
-  multi_prec<2> x_range, y_range, xmin, ymin, intervalx, intervaly;
+  multi_prec<prec> x_range, y_range;
   if (aspect_ratio<1){
     x_range = 4/zoom;
     y_range = (1/aspect_ratio)*4/zoom;
@@ -14,19 +15,16 @@ void calcPoint(multi_prec<2>& cr, multi_prec<2>& ci, multi_prec<2>& centerx, mul
     x_range = (aspect_ratio)*4/zoom;
     y_range = 4/zoom;
   }
-  xmin = centerx - x_range/2;
-  ymin = centery - y_range/2;
-  intervalx = x_range/width;
-  intervaly = y_range/height;
   
-  cr = xmin + i*intervalx;
-  ci = ymin + j*intervaly;
+  cr = (centerx - x_range/2) + i*(x_range/width);
+  ci = (centery - y_range/2) + j*(y_range/height);
 }
 
+template<int prec>
 __global__
-void GPU_PAR_FOR_HELPER(int height, int width,float* values, multi_prec<2> centerx, multi_prec<2> centery, multi_prec<2> zoom, size_t max_iter)
+void GPU_PAR_FOR_HELPER(int height, int width,float* values, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, size_t max_iter)
 {
-  multi_prec<2> R2=10.,
+  multi_prec<prec> R2=10.,
          zr=0.,
          zi=0.,
          cr=0.,
@@ -104,17 +102,33 @@ void applyIterGPU::SET_COORD_VALS(std::string centerx, std::string centery, std:
   //SET_COORD_VALS_HELPER<<<(width+127)/128, 128>>>(zr, zi, cr, ci, centerx, centery, zoom, width, height);
 }
     
-  
-void applyIterGPU::GPU_PAR_FOR()
+template <int prec>  
+void GPU_PAR_FOR_T(float* values, int height, int width, int max_iter, const char* centerx, const char* centery, const char* zoom)
 { 
-  multi_prec<2> centerx_ = centerx.c_str(),
-                centery_ = centery.c_str(),
-                zoom_ = zoom.c_str(); 
+  multi_prec<prec> centerx_ = centerx,
+                centery_ = centery,
+                zoom_ = zoom; 
 
-  GPU_PAR_FOR_HELPER<<<(height*width+255)/256, 256>>>(height, width, values, centerx_, centery_, zoom_, max_iter);
+  GPU_PAR_FOR_HELPER<prec><<<(height*width+255)/256, 256>>>(height, width, values, centerx_, centery_, zoom_, max_iter);
 
   // Wait for GPU to finish before accessing on host
   cudaDeviceSynchronize();
+}
+
+void applyIterGPU::GPU_PAR_FOR()
+{
+  multi_prec<5> zoom_ = zoom.c_str(),
+                prec2 = "1e4",
+                prec3 = "1e15",
+                prec4 = "1e23";
+  if (zoom_>prec2)
+    GPU_PAR_FOR_T<2>(values,height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
+  else if (zoom_>prec3)
+    GPU_PAR_FOR_T<3>(values,height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
+  else if (zoom_>prec4)
+    GPU_PAR_FOR_T<4>(values,height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
+  else
+    GPU_PAR_FOR_T<1>(values,height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
 }
 
 void applyIterGPU::copyValues(float* target)

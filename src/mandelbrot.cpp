@@ -22,13 +22,14 @@ mandelbrot::mandelbrot(int H, int W, std::string center[], std::string zoom, int
 }
 
 void mandelbrot::changeCenter(std::string new_center[]){
-	//center = new_center;
-	//isCalc = false;
+	centerx = new_center[0];
+  centery = new_center[1];
+	isCalc = false;
 }
 
 void mandelbrot::changeZoom(std::string new_zoom){
-	//zoom = new_zoom;
-	//isCalc = false;
+	zoom = new_zoom;
+	isCalc = false;
 }
 
 void mandelbrot::changeMaxIter(size_t new_max_iter){

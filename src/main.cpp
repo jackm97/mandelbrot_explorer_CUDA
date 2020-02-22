@@ -5,6 +5,7 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 #include "mandelbrot.h"
+#include "multi_prec_cpu/multi_prec.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ void getCenter(string center[]);
 void getSupersample(char supersample[]);
 void getMaxIter(int max_iter[]);
 void getZoom(string zoom[]);
-void getZoomRange(double zoom_range[]);
+void getZoomRange(float zoom_range[]);
 void getFrameCount(int frame_count[]);
 void getImagePath(string image_path[]);
 
@@ -72,10 +73,10 @@ int main(int argc, char *argv[]){
                 cv::destroyAllWindows();
 	}
 
-/*	
+	
 	// If the user wants a series of images to create a zoom animation
 	else if(strcmp(argv[1],"1") == 0){
-		double zoom, zoom_range[2];
+    float zoom_range[2];
 		int max_iter[1], frame_count[1];
 		string image_path[1];
 		getZoomRange(zoom_range);
@@ -85,11 +86,23 @@ int main(int argc, char *argv[]){
 		
 		// the zoom interval is designed to be exponential (i.e. a zoom interval of
 		// one would have zoom levels of 1e0, 1e1, 1e2, etc.)
-		double zoom_interval;
-		zoom_interval = (log10(zoom_range[1]) - log10(zoom_range[0]))/(frame_count[0]);
+		float exp = zoom_range[0];
+    float mod_exp = fmod(exp,1);
+    float base;
+    if (mod_exp==0)
+      base = 1;
+    else
+      base = pow(10,mod_exp);
+    
+    multi_prec<5> zoom_prec = ("1e" + to_string((int)floor(exp))).c_str();
+    string zoom = (base*zoom_prec).prettyPrintBF();
 		
-		zoom=zoom_range[0];
-		mandelbrot m(resolution[0], resolution[1], mandelbrot::Point(center[0],center[1]), zoom, max_iter[0]);
+    float zoom_min = zoom_range[0],
+          zoom_max = zoom_range[1],
+          zoom_interval;
+		zoom_interval = ((zoom_max) - (zoom_min))/(frame_count[0]);
+		
+		mandelbrot m(resolution[0], resolution[1], center, zoom, max_iter[0]);
 		for (int i=0; i<frame_count[0]; i++){
 			string fname = "image" + to_string(i);
 			m.changeZoom(zoom);
@@ -100,10 +113,18 @@ int main(int argc, char *argv[]){
         			cv::resize(image,image,cv::Size(),.5,.5);
 
 			cv::imwrite(image_path[0] + fname + ".jpg",image);
-			zoom*=pow(10,zoom_interval);
+			exp += zoom_interval;
+      mod_exp = fmod(exp,1);
+      if (mod_exp==0)
+        base=1;
+      else
+        base=pow(10,mod_exp);
+      zoom_prec = ("1e" + to_string((int)floor(exp))).c_str();
+      zoom = (base*zoom_prec).prettyPrintBF();
+      //cout << i+1 << " " << mod_exp << endl;
 		}
 	}
-*/
+
 	return 0;
 }
 
@@ -161,16 +182,16 @@ void getZoom(string zoom[]){
                 }*/
 }
 
-void getZoomRange(double zoom_range[]){
+void getZoomRange(float zoom_range[]){
                 cout << endl << "Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ";
                 cin >> zoom_range[0] >> zoom_range[1];
                 input_check("Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ", 2, zoom_range);
-                while (zoom_range[0] > 1e12 || zoom_range[0] <= 0 || zoom_range[1] > 1e12 || zoom_range[1] <= 0){
+                /*while (zoom_range[0] > 1e12 || zoom_range[0] <= 0 || zoom_range[1] > 1e12 || zoom_range[1] <= 0){
                         cout << "You have entered the wrong input" << endl;
                         cout << "Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ";
                         cin >> zoom_range[0] >> zoom_range[1];
                         input_check("Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ", 2, zoom_range);
-                }
+                }*/
 }
 
 void getFrameCount(int frame_count[]){
