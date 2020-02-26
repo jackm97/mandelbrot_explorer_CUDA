@@ -1,4 +1,4 @@
-#include <complex>
+#include <string>
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include "applyIterGPU.h"
@@ -20,7 +20,6 @@
 //
 class mandelbrot{
 	public:
-		typedef std::complex<float> Point;
 		typedef Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic> Array;
 		typedef cv::Mat ArrayCV; 
 		
@@ -31,15 +30,15 @@ class mandelbrot{
 		// 	center - complex center of image (real,imag)
 		// 	zoom - zoom level
 		// 	max_iter - maximum number of iterations before a point is considered in the set
-		mandelbrot(int H, int W, mandelbrot::Point center, double zoom, int max_iter);
+		mandelbrot(int H, int W, std::string center[], std::string zoom, int max_iter);
 		
 		// Changes the complex center of the image.
 		// The new image is not rendered in this function 
-		void changeCenter(mandelbrot::Point new_center);
+		void changeCenter(std::string new_center[]);
 		
 		// Changes the zoom level of the image
 		// The new image is not rendered in this function
-		void changeZoom(double new_zoom);
+		void changeZoom(std::string new_zoom);
 		
 		// Changes the maximum number of iterations
 		// The new image is not rendered in this function
@@ -55,8 +54,8 @@ class mandelbrot{
 		int height;
 		int width;
 		
-		mandelbrot::Point center;
-		double zoom;
+		std::string centerx, centery;
+		std::string zoom;
 		int max_iter;
 
     applyIterGPU GPU_object;
