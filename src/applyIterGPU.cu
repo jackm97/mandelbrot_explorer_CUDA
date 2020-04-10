@@ -2,28 +2,28 @@
 #include "applyIterGPU.h"
 #include "multi_prec/multi_prec_certif.h"
 
-__device__
+/*__device__
 void log10approx(float& value)
 {
   value = (value-1) + 
           (-1/(value*value))/(2)*(value-1)*(value-1) +
           (2/(value*value*value))/(6)*(value-1)*(value-1)*(value-1) +
           (-6/(value*value*value*value))/(24)*(value-1)*(value-1)*(value-1)*(value-1);
-}
+}*/
 
 
 __device__
 void smoothColor(float& iters, float zr2, float zi2)
 {
-   /*float nu;
+  float nu;
 
   nu = zr2 + zi2;
-        log10approx(nu);
-        nu/=2;
-        nu/=0.69314;
-        log10approx(nu);
-        nu/=0.69314;
-        iters = iters + 1 - nu;*/
+  nu = log10f(nu);
+  nu/=2;
+  nu/=0.69314;
+  nu = log10f(nu);
+  nu/=0.69314;
+  iters = iters + 1 - nu;
 }
 
 template<int prec>
