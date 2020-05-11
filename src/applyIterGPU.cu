@@ -2,16 +2,6 @@
 #include "applyIterGPU.h"
 #include "multi_prec/multi_prec_certif.h"
 
-/*__device__
-void log10approx(float& value)
-{
-  value = (value-1) + 
-          (-1/(value*value))/(2)*(value-1)*(value-1) +
-          (2/(value*value*value))/(6)*(value-1)*(value-1)*(value-1) +
-          (-6/(value*value*value*value))/(24)*(value-1)*(value-1)*(value-1)*(value-1);
-}*/
-
-
 __device__
 void smoothColor(float& iters, float zr2, float zi2)
 {
@@ -108,10 +98,6 @@ applyIterGPU::applyIterGPU(int height, int width, size_t max_iter):
   max_iter(max_iter)
 {
   cudaMalloc(&values, height*width*sizeof(float));
-  /*cudaMalloc(&zr, height*width*sizeof(float));
-  cudaMalloc(&zi, height*width*sizeof(float));
-  cudaMalloc(&cr, height*width*sizeof(float));
-  cudaMalloc(&ci, height*width*sizeof(float));*/
 }
 
 applyIterGPU::~applyIterGPU()

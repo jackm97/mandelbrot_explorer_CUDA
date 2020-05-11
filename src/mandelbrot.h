@@ -58,7 +58,7 @@ class mandelbrot{
 		std::string zoom;
 		int max_iter;
 
-    applyIterGPU GPU_object;
+    	applyIterGPU GPU_object;
 		
 		bool isCalc=false;
 		
