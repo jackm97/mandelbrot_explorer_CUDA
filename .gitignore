@@ -41,5 +41,6 @@ mandelbrot_explorer
 *.swp
 
 # Build Folder
+build_cpu/*
+build_gpu/*
 build/*
-build2/*
