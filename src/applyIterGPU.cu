@@ -132,9 +132,9 @@ void GPU_PAR_FOR_T(float* values, int height, int width, int max_iter, const cha
 
 void applyIterGPU::GPU_PAR_FOR()
 {
-  multi_prec<5> zoom_ = zoom.c_str(),
-                prec2("1e4"),
-                prec3("1e12"),
+  multi_prec<5> zoom_ = (zoom * max(height, width)).c_str(),
+                prec2("1e9"),
+                prec3("1e18"),
                 prec4("1e20");
   if (zoom_>prec4){
     //std::cout << "\nUsing double precision" << std::endl;
