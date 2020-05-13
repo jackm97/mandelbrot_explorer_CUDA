@@ -10,7 +10,8 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS}${GCC_COVERAGE_LINK_FLAGS}
 
 find_package( OpenCV 4.1 REQUIRED )
 
-include_directories("./src/eigen3")
+include_directories("./src/include/eigen3" "./src/include/")
 
-add_executable(mandelbrot_explorer "src/main.cpp" "src/mandelbrot.cpp" "src/applyIterGPU.cu" "src/applyIterGPU.h")
-target_link_libraries( mandelbrot_explorer ${OpenCV_LIBS})
+add_executable(mandelbrot_explorer "src/main.cpp" "src/glad.cpp" "src/mandelbrot.cpp" "src/Shader.cpp" "src/applyIterGPU.cu" "src/applyIterGPU.h") 
+target_link_libraries( mandelbrot_explorer ${OpenCV_LIBS} "-lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl")
+

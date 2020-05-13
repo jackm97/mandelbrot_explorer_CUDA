@@ -2,6 +2,8 @@
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include "applyIterGPU.h"
+#include <GLFW/glfw3.h>
+#include <cuda_runtime_api.h>
 
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
@@ -49,6 +51,13 @@ class mandelbrot{
 		// the current parameters hasn't been rendered, 
 		// it is rendered in this step
 		mandelbrot::ArrayCV getImageCV();
+
+		cudaGraphicsResource_t* getReferencePointer();
+
+		void registerTexture(GLuint image);
+		
+		// Updates values within GPU_object
+		void getImage();
 	
 	private:
 		int height;

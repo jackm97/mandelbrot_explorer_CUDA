@@ -50,6 +50,22 @@ mandelbrot::ArrayCV mandelbrot::getImageCV(){
 	return image;
 }
 
+cudaGraphicsResource_t* mandelbrot::getReferencePointer(){
+	return GPU_object.getReferencePointer();
+}
+
+void mandelbrot::registerTexture(GLuint image){
+	GPU_object.registerTextureResource(image);
+}
+
+void mandelbrot::getImage(){
+	if (!isCalc){
+		resetValues();
+		GPU_object.GPU_PAR_FOR();
+		isCalc=true;
+	}
+}
+
 void mandelbrot::resetValues(){	
   GPU_object.SET_COORD_VALS(centerx,centery,zoom);	
 }
