@@ -1,8 +1,10 @@
+#include <cmath>
 #include <iostream>
 #include "applyIterGPU.h"
 #include "multi_prec/multi_prec_certif.h"
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
+#include <cuda_fp16.h>
 #include <GLFW/glfw3.h>
 
 surface<void, cudaSurfaceType2D> surfRef;
@@ -43,8 +45,9 @@ void calcPoint(multi_prec<prec>& cr, multi_prec<prec>& ci, multi_prec<prec>& cen
 template<int prec>
 __global__ void
  __launch_bounds__(256, 4) 
-GPU_PAR_FOR_HELPER(int height, int width, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, size_t max_iter)
+GPU_PAR_FOR_HELPER(int height, int width, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, int max_iter)
 {
+  
   multi_prec<prec> cr=0., ci=0., q;
 
   multi_prec<prec> R2=10.,
@@ -71,14 +74,15 @@ GPU_PAR_FOR_HELPER(int height, int width, multi_prec<prec> centerx, multi_prec<p
     float j = idx - height*i;
     calcPoint(cr,ci,centerx,centery,zoom,width,height,i,j);
     
+    
     // q is used to determine if a point is within the set
     // without needing to iterate to max_iter
     q = (cr-1./4)*(cr-1./4) + ci*ci;
 
     if (q*(q+(cr-1./4)) <= 1./4*ci*ci)
-      iters=max_iter;
+      iters=NAN;
     else if ((cr+1)*(cr+1) + ci*ci <= 1./16)
-      iters=max_iter;
+      iters=NAN;
     
     while((zr2+zi2<=R2) && (iters<max_iter))
     {
@@ -89,20 +93,19 @@ GPU_PAR_FOR_HELPER(int height, int width, multi_prec<prec> centerx, multi_prec<p
       zi2 = zi* zi; 
       iters+=1;
     }
+
+    if (iters == max_iter)
+      iters = NAN;
     multi_prec<1> zr2_32(zr2.getData(),prec);
     multi_prec<1> zi2_32(zi2.getData(),prec);
     smoothColor(iters,zr2_32.getData()[0],zi2_32.getData()[0]);
-    //values[idx] = iters;
-    float4 pixelVal;
-    pixelVal.x = float(iters)/float(max_iter) * float(iters != max_iter);
-    pixelVal.x = fmodf(20 * pixelVal.x, 1.0) * 2;
-    if ( pixelVal.x > 1)
-      pixelVal.x = 2 - pixelVal.x;
-    pixelVal.y = 0.0f;
-    pixelVal.z = 0.0f;
-    pixelVal.w = 0.0f;
-    surf2Dwrite(pixelVal, surfRef, 4 * 4 * i, j);
-    //printf("%.3f\n",iters);
+
+    float value = iters/max_iter * float(iters != max_iter);
+    value = fmodf(20 * value, 1.0) * 2;
+    if ( value > 1)
+      value = 2 - value;
+    surf2Dwrite(value, surfRef, 4 * i, j);
+    //printf("%.3f\n",cr);
   }
 }
 
@@ -121,7 +124,7 @@ applyIterGPU::~applyIterGPU()
   cudaFree(ci);*/
 }
 
-void applyIterGPU::SET_COORD_VALS(std::string centerx, std::string centery, std::string zoom)
+void applyIterGPU::SET_COORD_VALS(std::string centerx, std::string centery, float zoom)
 {
   this->centerx = centerx;
   this->centery = centery;
@@ -129,14 +132,29 @@ void applyIterGPU::SET_COORD_VALS(std::string centerx, std::string centery, std:
   //SET_COORD_VALS_HELPER<<<(width+127)/128, 128>>>(zr, zi, cr, ci, centerx, centery, zoom, width, height);
 }
     
-template <int prec>  
-void GPU_PAR_FOR_T(int height, int width, int max_iter, const char* centerx, const char* centery, const char* zoom)
+template <int prec>
+__host__  
+void GPU_PAR_FOR_T(int height, int width, int max_iter, const char* centerx, const char* centery, float zoom_level)
 { 
   multi_prec<prec> centerx_ = centerx,
-                centery_ = centery,
-                zoom_ = zoom; 
+                centery_ = centery;
 
-  GPU_PAR_FOR_HELPER<prec><<<(height*width+255)/256, 256>>>(height, width, centerx_, centery_, zoom_, max_iter);
+  // the zoom interval is designed to be exponential (i.e. a zoom interval of
+  // one would have zoom levels of 1e0, 1e1, 1e2, etc.)
+  float mod_exp = fmod(zoom_level,1.0);
+  float base;
+  if (mod_exp==0)
+          base = 1;
+  else
+          base = pow(10,mod_exp);
+
+  string zoom_str = to_string(int(floor(zoom_level)));
+  zoom_str = "1e" + zoom_str;
+
+  multi_prec<prec> zoom(zoom_str.c_str());
+  zoom = (base*zoom);
+
+  GPU_PAR_FOR_HELPER<prec><<<(height*width+255)/256, 256>>>(height, width, centerx_, centery_, zoom, max_iter);
 
   // Wait for GPU to finish before accessing on host
   cudaDeviceSynchronize();
@@ -147,26 +165,24 @@ void applyIterGPU::GPU_PAR_FOR()
   cudaGraphicsMapResources ( 1, &resource );
   cudaGraphicsSubResourceGetMappedArray ( &mappedArray, resource, 0, 0 );
   cudaBindSurfaceToArray(surfRef, mappedArray);
-  multi_prec<5> zoom_ = zoom.c_str(),
-                prec2("1e9"),
-                prec3("1e18"),
-                prec4("1e20");
-  zoom_ = zoom_  * max(height, width);
-  if (zoom_>prec4){
+ float prec2 = 9.0, prec3 = 18.0, prec4 = 20.0;
+
+  float zoom_check = zoom  + log10(float(max(height, width))) + log10(1000.);
+  if (zoom_check>prec4){
     //std::cout << "\nUsing quadruple precision" << std::endl;
-    GPU_PAR_FOR_T<4>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
+    GPU_PAR_FOR_T<4>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom);
   }
-  else if (zoom_>prec3){
+  else if (zoom_check>prec3){
     //std::cout << "Using triple precision" << std::endl;
-    GPU_PAR_FOR_T<3>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
+    GPU_PAR_FOR_T<3>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom);
   }
-  else if (zoom_>prec2){
+  else if (zoom_check>prec2){
     //std::cout << "Using double precision" << std::endl;
-    GPU_PAR_FOR_T<2>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
+    GPU_PAR_FOR_T<2>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom);
   }
   else{
     //std::cout << "Using single precision" << std::endl;
-    GPU_PAR_FOR_T<1>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom.c_str());
+    GPU_PAR_FOR_T<1>(height,width,max_iter,centerx.c_str(),centery.c_str(),zoom);
   }
   cudaGraphicsUnmapResources( 1, &resource );
 }

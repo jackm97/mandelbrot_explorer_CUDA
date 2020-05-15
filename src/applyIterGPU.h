@@ -12,7 +12,7 @@ public:
   
   void GPU_PAR_FOR();
 
-  void SET_COORD_VALS(std::string centerx, std::string centery, std::string zoom);
+  void SET_COORD_VALS(std::string centerx, std::string centery, float zoom);
 
   void copyValues(float* target);
 
@@ -29,7 +29,8 @@ public:
   ~applyIterGPU();
 
 private:
-    std::string centerx="0",centery="0",zoom="1";
+    std::string centerx="0",centery="0";
+    float zoom = 0;
     size_t max_iter;
     int height, width;
 

@@ -6,31 +6,35 @@
 #include <sstream>
 #include <iostream>
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* colormapPath)
 {
 	//1. retrieve vertex/fragment source code from filePath
 	std::string vertexCode;
 	std::string fragmentCode;
 	std::ifstream vShaderFile;
 	std::ifstream fShaderFile;
+	std::ifstream colormapFile;
 	// ensure ifstream objects can throw exceptions
 	vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	colormapFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	try
 	{
 		//open files
 		vShaderFile.open(vertexPath);
 		fShaderFile.open(fragmentPath);
-		std::stringstream vShaderStream, fShaderStream;
+		colormapFile.open(colormapPath);
+		std::stringstream vShaderStream, fShaderStream, colormapStream;
 		// read file's buffer contents into streams
 		vShaderStream << vShaderFile.rdbuf();
 		fShaderStream << fShaderFile.rdbuf();
+		colormapStream << colormapFile.rdbuf();
 		
 		vShaderFile.close();
 		fShaderFile.close();
 		
 		vertexCode = vShaderStream.str();
-		fragmentCode = fShaderStream.str();
+		fragmentCode = fShaderStream.str() + "\n" + colormapStream.str();
 	}
 	catch(std::ifstream::failure e)
 	{

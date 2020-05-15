@@ -1,5 +1,4 @@
 #include <string>
-#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include "applyIterGPU.h"
 #include <GLFW/glfw3.h>
@@ -22,8 +21,9 @@
 //
 class mandelbrot{
 	public:
-		typedef Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic> Array;
-		typedef cv::Mat ArrayCV; 
+
+		// Empty Constructor
+		mandelbrot(){} 
 		
 		// Constructor:
 		// 	Inputs:
@@ -32,7 +32,7 @@ class mandelbrot{
 		// 	center - complex center of image (real,imag)
 		// 	zoom - zoom level
 		// 	max_iter - maximum number of iterations before a point is considered in the set
-		mandelbrot(int H, int W, std::string center[], std::string zoom, int max_iter);
+		mandelbrot(int H, int W, std::string center[], float zoom, int max_iter);
 		
 		// Changes the complex center of the image.
 		// The new image is not rendered in this function 
@@ -40,17 +40,11 @@ class mandelbrot{
 		
 		// Changes the zoom level of the image
 		// The new image is not rendered in this function
-		void changeZoom(std::string new_zoom);
+		void changeZoom(float new_zoom);
 		
 		// Changes the maximum number of iterations
 		// The new image is not rendered in this function
 		void changeMaxIter(size_t new_max_iter);
-		
-		// Returns a cv array of the image with the parameters
-		// previously specified by the user. If the image with
-		// the current parameters hasn't been rendered, 
-		// it is rendered in this step
-		mandelbrot::ArrayCV getImageCV();
 
 		cudaGraphicsResource_t* getReferencePointer();
 
@@ -64,20 +58,12 @@ class mandelbrot{
 		int width;
 		
 		std::string centerx, centery;
-		std::string zoom;
+		float zoom;
 		int max_iter;
 
     	applyIterGPU GPU_object;
 		
 		bool isCalc=false;
-		
-		/*mandelbrot::Array cr;
-		mandelbrot::Array ci;
-		mandelbrot::Array zr;
-		mandelbrot::Array zi;*/
-		
-		mandelbrot::Array values;
-		mandelbrot::ArrayCV image;
 		
 		// Resets all variables of type mandelbrot::Array 
 		// to zero except for cr and ci whose values are 
