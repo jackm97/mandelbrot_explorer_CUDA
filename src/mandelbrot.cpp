@@ -21,6 +21,7 @@ void mandelbrot::changeCenter(std::string new_center[]){
 
 void mandelbrot::changeZoom(float new_zoom){
 	zoom = new_zoom;
+	GPU_object.SET_ZOOM(zoom);
 	isCalc = false;
 }
 
@@ -28,6 +29,17 @@ void mandelbrot::changeMaxIter(size_t new_max_iter){
 	max_iter = new_max_iter;
   GPU_object.setMaxIter(max_iter);
 	isCalc = false;
+}
+
+void mandelbrot::moveDirection(int direction){
+	GPU_object.moveTexture(direction);
+	GPU_object.getCenterString(centerx, centery);
+}
+
+void mandelbrot::printLocation(){
+	std::cout << "\nZoom: " << zoom << std::endl;
+	std::cout << "X: " << centerx << std::endl;
+	std::cout << "Y: " << centery << std::endl;
 }
 
 cudaGraphicsResource_t* mandelbrot::getReferencePointer(){
@@ -40,7 +52,6 @@ void mandelbrot::registerTexture(GLuint image){
 
 void mandelbrot::getImage(){
 	if (!isCalc){
-		resetValues();
 		GPU_object.GPU_PAR_FOR();
 		isCalc=true;
 	}

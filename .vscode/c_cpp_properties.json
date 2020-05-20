@@ -8,7 +8,8 @@
                 "/usr/local/cuda/include",
                 "${workspaceFolder}/src/include/eigen3",
                 "${workspaceFolder}/src/include/",
-                "/usr/include/x86_64-linux-gnu"
+                "/usr/include/x86_64-linux-gnu",
+                "/usr/include/x86_64-linux-gnu/c++/8"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

@@ -6,9 +6,7 @@
 #include <cmath>
 #include <limits>
 #include <string>
-#include <opencv2/opencv.hpp>
 #include "mandelbrot.h"
-#include "multi_prec_cpu/multi_prec.h"
 #include "Shader.hpp"
 
 using namespace std;
@@ -27,12 +25,18 @@ void getImagePath(string image_path[]);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 // Checks user input to ensure correct program behavior.
 // The string, prompt_str, is shown on the standard output
 // until a valid input is given by the user
 template<class var_type>
 void input_check(string prompt_str, int argc, var_type argv[]);
+
+bool MOVE_TEXTURE = false;
+bool PRINT_LOCATION = false;
+int DIRECTION = 0;
+float ZOOM = 0;
 
 int main(int argc, char *argv[]){
 
@@ -80,6 +84,10 @@ int main(int argc, char *argv[]){
         if (supersample[0]=='y' || supersample[0]=='Y')
                 resScale = 2;
 
+        mandelbrot m(resolution[0] * resScale, resolution[1] * resScale, center, zoom[0], max_iter[0]);
+
+        ZOOM = zoom[0];
+
         // glfw: initialize and configure
         // ------------------------------
         glfwInit();
@@ -102,6 +110,7 @@ int main(int argc, char *argv[]){
         }
         glfwMakeContextCurrent(window);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+        glfwSetKeyCallback(window, key_callback);
 
         // glad: load all OpenGL function pointers
         // ---------------------------------------
@@ -164,8 +173,6 @@ int main(int argc, char *argv[]){
         // Create texture data
         glTexImage2D( GL_TEXTURE_2D, 0, GL_R32F, resolution[1] * resScale, resolution[0] * resScale, 0, GL_RED, GL_FLOAT, NULL );
 
-        mandelbrot m(resolution[0] * resScale, resolution[1] * resScale, center, zoom[0], max_iter[0]);
-
         m.registerTexture(texture);
 
         // Unbind the texture
@@ -174,12 +181,27 @@ int main(int argc, char *argv[]){
 	// If the user wants a single image	
 	if (strcmp(argv[1],"0") == 0){
 
-                m.getImage();
-
                 // render loop
                 // -----------
                 while (!glfwWindowShouldClose(window))
                 {
+                        if (ZOOM!=zoom[0]){
+                                m.changeZoom(ZOOM);
+                                zoom[0] = ZOOM;
+                        }
+
+                        if (PRINT_LOCATION==true){
+                                m.printLocation();
+                                PRINT_LOCATION=false;
+                        }
+
+                        m.getImage();
+
+                        if (MOVE_TEXTURE){
+                                for (int i = 0; i<5; i++) m.moveDirection(DIRECTION);
+                                MOVE_TEXTURE = false;
+                        }
+
                         // input
                         // -----
                         processInput(window);
@@ -224,11 +246,11 @@ int main(int argc, char *argv[]){
                 zoom_interval;
 		zoom_interval = ((zoom_max) - (zoom_min))/(frame_count[0]);
 
-		for (int i=0; i<frame_count[0] && !glfwWindowShouldClose(window); i++){
+		while (!glfwWindowShouldClose(window)){
 			m.changeZoom(zoom[0]);
                         
 			m.getImage();
-                        
+
                         // input
                         // -----
                         processInput(window);
@@ -259,6 +281,8 @@ int main(int argc, char *argv[]){
 
 			
 			zoom[0] += zoom_interval;
+                        if (zoom[0] >= zoom_max)
+                                zoom[0] = zoom_min;
 		}
 
                 // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -283,9 +307,17 @@ void getResolution(int resolution[]){
 }
 
 void getCenter(string center[]){
-        cout << endl << "Enter center point (e.g. x y): ";
-        cin >> center[0] >> center[1];
-        input_check("Enter center point (e.g. x y): ", 2, center);
+        char input[100];
+        cin.getline(input,sizeof(input));
+        cout << endl << "Enter x val: ";
+        cin.getline(input,sizeof(input));
+        center[0] = input;
+
+        cout << endl << "Enter y val: ";
+        cin.getline(input,sizeof(input));
+        center[1] = input;
+        
+        //input_check("Enter center point (e.g. x y): ", 2, center);
 }
 
 void getSupersample(char supersample[]){
@@ -385,8 +417,43 @@ void input_check(string prompt_str, int argc, var_type argv[]){
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+        if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                glfwSetWindowShouldClose(window, true);
+        
+        else if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+                DIRECTION = 0;
+                MOVE_TEXTURE = true;
+        }
+        else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+                DIRECTION = 1;
+                MOVE_TEXTURE = true;
+        }
+        else if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+                DIRECTION = 2;
+                MOVE_TEXTURE = true;
+        }
+        else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+                DIRECTION = 3;
+                MOVE_TEXTURE = true;
+        }
+        else if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+                ZOOM += .005;
+        }
+        else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+                ZOOM -= .005;
+        }
+}
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+        if(key == GLFW_KEY_RIGHT && action == GLFW_PRESS){
+                ZOOM += 1;
+        }
+        else if(key == GLFW_KEY_LEFT && action == GLFW_PRESS){
+                ZOOM -= 1;
+        }
+        else if(key == GLFW_KEY_ENTER && action == GLFW_PRESS){
+                PRINT_LOCATION = true;
+        }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

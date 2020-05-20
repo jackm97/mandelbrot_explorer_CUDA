@@ -46,6 +46,10 @@ class mandelbrot{
 		// The new image is not rendered in this function
 		void changeMaxIter(size_t new_max_iter);
 
+		void moveDirection(int direction);
+
+		void printLocation();
+
 		cudaGraphicsResource_t* getReferencePointer();
 
 		void registerTexture(GLuint image);

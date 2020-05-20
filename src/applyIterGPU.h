@@ -12,7 +12,13 @@ public:
   
   void GPU_PAR_FOR();
 
+  void moveTexture(int direction);
+
   void SET_COORD_VALS(std::string centerx, std::string centery, float zoom);
+
+  void SET_ZOOM(float zoom);
+
+  void getCenterString(std::string &centerx, std::string &centery);
 
   void copyValues(float* target);
 
@@ -29,10 +35,11 @@ public:
   ~applyIterGPU();
 
 private:
-    std::string centerx="0",centery="0";
+    float center[2][5] = {{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0}};
     float zoom = 0;
     size_t max_iter;
     int height, width;
+    float* iterData, *iterDataTmp;
 
     // OPENGL STUFF
     cudaGraphicsResource_t resource;
