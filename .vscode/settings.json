@@ -63,5 +63,6 @@
         "typeinfo": "cpp",
         "bit": "cpp",
         "__nullptr": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
