@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <iostream>
 
 mandelbrot::mandelbrot(int H, int W, std::string center[], float zoom, int max_iter): 
 	height(H), width(W), 
@@ -40,10 +41,6 @@ void mandelbrot::printLocation(){
 	std::cout << "\nZoom: " << zoom << std::endl;
 	std::cout << "X: " << centerx << std::endl;
 	std::cout << "Y: " << centery << std::endl;
-}
-
-cudaGraphicsResource_t* mandelbrot::getReferencePointer(){
-	return GPU_object.getReferencePointer();
 }
 
 void mandelbrot::registerTexture(GLuint image){

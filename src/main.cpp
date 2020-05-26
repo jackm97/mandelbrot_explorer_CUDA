@@ -6,6 +6,7 @@
 #include <cmath>
 #include <limits>
 #include <string>
+#include <cstring>
 #include "mandelbrot.h"
 #include "Shader.hpp"
 

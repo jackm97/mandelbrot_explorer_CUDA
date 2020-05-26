@@ -1,8 +1,5 @@
 #include <string>
-#include <opencv2/opencv.hpp>
 #include "applyIterGPU.h"
-#include <GLFW/glfw3.h>
-#include <cuda_runtime_api.h>
 
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
@@ -49,8 +46,6 @@ class mandelbrot{
 		void moveDirection(int direction);
 
 		void printLocation();
-
-		cudaGraphicsResource_t* getReferencePointer();
 
 		void registerTexture(GLuint image);
 		
