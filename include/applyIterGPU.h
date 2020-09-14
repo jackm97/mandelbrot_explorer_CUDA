@@ -1,6 +1,7 @@
 #ifndef APPLYITERGPU_H
 #define APPLYITERGPU_H
 
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cuda_runtime_api.h>
 #include <string>

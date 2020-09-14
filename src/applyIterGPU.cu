@@ -3,10 +3,11 @@
 #include <string>
 #include "applyIterGPU.h"
 #include "multi_prec/multi_prec_certif.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
 #include <cuda_fp16.h>
-#include <GLFW/glfw3.h>
 
 surface<void, cudaSurfaceType2D> surfRef;
 
@@ -308,7 +309,7 @@ void moveCenter(int direction, int height, int width, int max_iter, float new_ce
   // left
   else if (direction == 2)
     cr -= x_range/width;
-  // down
+  // right
   else if (direction == 3)
     cr += x_range/width;
 
@@ -540,16 +541,16 @@ void moveTexture_T(int direction, int height, int width, int max_iter, float cen
   centerx_.setData(center[0],prec);
   centery_.setData(center[1],prec);
 
-  // up
+  // down
   if (direction == 1)
     renderRow<prec><<<(width+255)/256, 256>>>(0, height, width, max_iter, centerx_, centery_, zoom, iterData);
-  // down
+  // up
   else if (direction == 0)
     renderRow<prec><<<(width+255)/256, 256>>>(height - 1, height, width, max_iter, centerx_, centery_, zoom, iterData);
-  // left
+  // right
   else if (direction == 3)
     renderCol<prec><<<(height+255)/256, 256>>>(width - 1, height, width, max_iter, centerx_, centery_, zoom, iterData);
-  // up
+  // left
   else if (direction == 2)
     renderCol<prec><<<(height+255)/256, 256>>>(0, height, width, max_iter, centerx_, centery_, zoom, iterData);
     

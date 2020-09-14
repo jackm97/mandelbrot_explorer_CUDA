@@ -2,14 +2,29 @@ cmake_minimum_required(VERSION 3.13)
 
 project(mandelbrot_explorer LANGUAGES CXX CUDA)
 
-#target_compile_features(mandelbrot_explorer PUBLIC cxx_std_11)
+find_package( OpenCV )
 
-SET(GCC_COVERAGE_COMPILE_FLAGS "-O2 -std=c++11")
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS}${GCC_COVERAGE_LINK_FLAGS}")
+include_directories(include ${OpenCV_INCLUDE_DIRS})
 
-include_directories("./src/include/eigen3" "./src/include/")
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_executable(mandelbrot_explorer "src/main.cpp" "src/glad.cpp" "src/mandelbrot.cpp" "src/Shader.cpp" "src/applyIterGPU.cu" "src/applyIterGPU.h") 
-target_link_libraries( mandelbrot_explorer "-lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl")
+add_subdirectory("./extern/glfw")
+
+add_library(glad STATIC "src/glad.cpp")
+
+add_library(mandelbrot STATIC "src/mandelbrot.cpp" "src/applyIterGPU.cu")
+target_link_libraries(mandelbrot PUBLIC glad)
+
+add_library(Shader STATIC "src/Shader.cpp")
+
+add_executable(mandelbrot_explorer "src/main.cpp") 
+set_property(TARGET mandelbrot_explorer PROPERTY CUDA_STANDARD 11)
+target_link_libraries( mandelbrot_explorer PUBLIC glad	
+					     PUBLIC mandelbrot
+					     PUBLIC Shader
+					     PUBLIC glfw
+						 PUBLIC ${OpenCV_LIBS} 
+					     )
 

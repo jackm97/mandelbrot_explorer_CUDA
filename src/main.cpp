@@ -1,5 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 #include <cuda_runtime_api.h>
 #include <string>
 #include <iostream>
@@ -26,7 +28,7 @@ void getImagePath(string image_path[]);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
 // Checks user input to ensure correct program behavior.
 // The string, prompt_str, is shown on the standard output
@@ -42,13 +44,13 @@ float ZOOM = 0;
 int main(int argc, char *argv[]){
 
 	string USAGE = \
-		       "USAGE: ./mandelbrot_explorer arg1\n   arg1:  \"0\" for single image, \"1\" for zoom animation\n";
+		       "USAGE: ./mandelbrot_explorer arg1\n   arg1:  \"0\" for single image, \"1\" for real-time zoom animation, \"2\" to render zoom animation to file\n";
 			
 	if (argc!=2){
 		cerr << USAGE;
 		exit(1);
 	}
-	if (strcmp(argv[1],"0")!=0 && strcmp(argv[1],"1")!=0){
+	if (strcmp(argv[1],"0")!=0 && strcmp(argv[1],"1")!=0 && strcmp(argv[1],"2")!=0){
 	       cerr << USAGE;	
 	       exit(1);
 	}
@@ -60,7 +62,7 @@ int main(int argc, char *argv[]){
         float zoom_range[2];
         int max_iter[1], frame_count[1];
         string colorMap[1];
-        //string image_path[1];
+        string image_path[1];
         
 	getResolution(resolution);
 	getCenter(center);
@@ -72,12 +74,19 @@ int main(int argc, char *argv[]){
 		getZoom(zoom);
 		getMaxIter(max_iter);
         }
-        // If the user wants a series of images to create a zoom animation
+        // If the user wants a series of images to create a real-time zoom animation
 	else if(strcmp(argv[1],"1") == 0){
                 getZoomRange(zoom_range);
                 getFrameCount(frame_count);
                 getMaxIter(max_iter);
-                //getImagePath(image_path);
+                zoom[0] = zoom_range[0];
+        }
+        // If the user wants to save series of images to file
+	else if(strcmp(argv[1],"2") == 0){
+                getZoomRange(zoom_range);
+                getFrameCount(frame_count);
+                getMaxIter(max_iter);
+                getImagePath(image_path);
                 zoom[0] = zoom_range[0];
         }
 
@@ -123,8 +132,8 @@ int main(int argc, char *argv[]){
 
         // build and compile our shader zprogram
         // ------------------------------------
-        string shaderPath = string("../src/colormap-shaders-master/shaders/glsl/") + colorMap[0] + string(".frag");
-        Shader ourShader("../src/mandelbrot.vs", "../src/mandelbrot.fs", shaderPath.c_str());
+        string colormapShaderPath = string("../shaders/colormap-shaders-master/shaders/glsl/") + colorMap[0] + string(".frag");
+        Shader ourShader("../shaders/mandelbrot.vs", "../shaders/mandelbrot.fs", colormapShaderPath.c_str());
 
         // vertices
         float vertices[] = {
@@ -239,7 +248,7 @@ int main(int argc, char *argv[]){
 	}
 
 	
-	// If the user wants a series of images to create a zoom animation
+	// If the user wants to render real-time zoom animation
 	else if(strcmp(argv[1],"1") == 0){
 		
                 float zoom_min = zoom_range[0],
@@ -282,9 +291,101 @@ int main(int argc, char *argv[]){
 
 			
 			zoom[0] += zoom_interval;
-                        if (zoom[0] >= zoom_max)
-                                zoom[0] = zoom_min;
+                        if (zoom[0] >= zoom_max) zoom[0] = zoom_min;
 		}
+
+                // glfw: terminate, clearing all previously allocated GLFW resources.
+                // ------------------------------------------------------------------
+                glfwTerminate();
+                return 0;
+	}
+
+        // If the user wants a series of images to create a zoom animation to save
+	else if(strcmp(argv[1],"2") == 0){
+		
+                float zoom_min = zoom_range[0],
+                zoom_max = zoom_range[1],
+                zoom_interval;
+		zoom_interval = ((zoom_max) - (zoom_min))/(frame_count[0]);
+
+                // setup framebuffer and renderbuffer for off-screen rendering
+                GLuint FBO, RBO;
+                glGenFramebuffers(1, &FBO);
+                glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+                glGenRenderbuffers(1, &RBO);
+                glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+                int height=resolution[0], width=resolution[1];
+                glRenderbufferStorage(GL_RENDERBUFFER,
+                           GL_RGBA,
+                           width,
+                           height);
+                // glfwGetWindowSize(window, &width, &height);
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_RENDERBUFFER,
+                               RBO);
+
+                // allocate memory for image data that will be
+                // saved using cv:Mat
+                void *pixelData = malloc(4 * width * height);
+                int imageCount = 0;
+                cv::Mat image(height, width, CV_8UC4);
+
+		while (!glfwWindowShouldClose(window)){
+			m.changeZoom(zoom[0]);
+                        
+			m.getImage();
+
+                        // input
+                        // -----
+                        processInput(window);
+
+                        // ensure that FBO has correct resolution
+                        // -----
+                        glViewport(0,0,width,height);
+
+                        // render
+                        // ------
+                        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+                        glClear(GL_COLOR_BUFFER_BIT);
+
+                        // bind textures on corresponding texture units
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, texture);
+
+                        // render container
+                        ourShader.use();
+                        glBindVertexArray(VAO);
+                        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+                        glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, pixelData);
+
+                        memcpy(image.data, pixelData, 4 * width * height);
+                        cv::flip(image,image,0);
+                        cv::imwrite(image_path[0] + "image" + to_string(imageCount) + ".png", image);
+
+                        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+                        // -------------------------------------------------------------------------------
+                        glfwGetWindowSize(window, &width, &height);
+                        glViewport(0,0,width,height);
+                        height=resolution[0]; width=resolution[1];
+                        glfwSwapBuffers(window);
+                        glfwPollEvents();
+
+                        // Unbind the texture
+                        glBindTexture( GL_TEXTURE_2D, 0 );
+
+			
+			zoom[0] += zoom_interval;
+                        if (zoom[0] >= zoom_max) break;
+
+                        imageCount++;
+		}
+                glBindRenderbuffer(GL_RENDERBUFFER,0);
+                glDeleteRenderbuffers(1, &RBO);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                glDeleteFramebuffers(1, &FBO);
 
                 // glfw: terminate, clearing all previously allocated GLFW resources.
                 // ------------------------------------------------------------------
@@ -334,11 +435,9 @@ void getSupersample(char supersample[]){
 }
 
 void getColorMap(string colorMap[]){
-        cout << endl << "Which colormap would you like to use (empty is default)?";
+        cout << endl << "Which colormap would you like to use (type DEFAULT for monochrome red)?";
         cin >> colorMap[0];
-        input_check("Which colormap would you like to use (empty is default)?", 1, colorMap);
-        if (colorMap[0].length() == 0)
-                colorMap[0] = "Default";
+        input_check("Which colormap would you like to use (type DEFAULT for monochrome red)?", 1, colorMap);
 }
 
 void getMaxIter(int max_iter[]){
@@ -354,9 +453,9 @@ void getMaxIter(int max_iter[]){
 }
 
 void getZoom(float zoom[]){
-                cout << endl <<  "Enter zoom level(maximum of 1e12): ";
+                cout << endl <<  "Enter zoom level where zoom = 10^(level): ";
                 cin >> zoom[0];
-                input_check("Enter zoom level(maximum of 1e12): ", 1, zoom);
+                input_check("Enter zoom level where zoom = 10^(level): ", 1, zoom);
                 /*while (zoom[0] > 1e12 || zoom[0] <= 0){
                         cout << "You have entered the wrong input" << endl;
                         cout << "Enter zoom level(maximum of 1e12): ";
@@ -366,15 +465,9 @@ void getZoom(float zoom[]){
 }
 
 void getZoomRange(float zoom_range[]){
-                cout << endl << "Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ";
+                cout << endl << "Enter initial and final zoom level where zoom = 10^(level) (e.g. start_zoom end_zoom): ";
                 cin >> zoom_range[0] >> zoom_range[1];
-                input_check("Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ", 2, zoom_range);
-                /*while (zoom_range[0] > 1e12 || zoom_range[0] <= 0 || zoom_range[1] > 1e12 || zoom_range[1] <= 0){
-                        cout << "You have entered the wrong input" << endl;
-                        cout << "Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ";
-                        cin >> zoom_range[0] >> zoom_range[1];
-                        input_check("Enter initial and final zoom level, maximum zoom is 1e12 (e.g. start_zoom end_zoom): ", 2, zoom_range);
-                }*/
+                input_check("Enter initial and final zoom level where zoom = 10^(level) (e.g. start_zoom end_zoom): ", 2, zoom_range);
 }
 
 void getFrameCount(int frame_count[]){
