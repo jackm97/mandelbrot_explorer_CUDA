@@ -1,14 +1,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <cuda_runtime_api.h>
 #include <string>
 #include <iostream>
 #include <cmath>
 #include <limits>
 #include <string>
 #include <cstring>
+#include <vector>
+#include <lodepng-master/lodepng.h>
 #include "mandelbrot.h"
 #include "Shader.hpp"
 
@@ -330,7 +329,7 @@ int main(int argc, char *argv[]){
                 // saved using cv:Mat
                 void *pixelData = malloc(4 * width * height);
                 int imageCount = 0;
-                cv::Mat image(height, width, CV_8UC4);
+                std::vector<unsigned char> png(4 * width * height);
 
 		while (!glfwWindowShouldClose(window)){
 			m.changeZoom(zoom[0]);
@@ -359,11 +358,14 @@ int main(int argc, char *argv[]){
                         glBindVertexArray(VAO);
                         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-                        glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, pixelData);
+                        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
 
-                        memcpy(image.data, pixelData, 4 * width * height);
-                        cv::flip(image,image,0);
-                        cv::imwrite(image_path[0] + "image" + to_string(imageCount) + ".png", image);
+                        //Encode the image
+                        memcpy(png.data(), pixelData, 4 * width * height);
+                        unsigned error = lodepng::encode((image_path[0]+"image"+std::to_string(imageCount)).c_str(), png, width, height);
+
+                        //if there's an error, display it
+                        if(error) std::cout << "encoder error " << error << ": "<< lodepng_error_text(error) << std::endl;
 
                         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
                         // -------------------------------------------------------------------------------
@@ -397,20 +399,22 @@ int main(int argc, char *argv[]){
 }
 
 void getResolution(int resolution[]){
-        cout << "Enter resolution, positive integers (e.g. height width): ";
-        cin >> resolution[0] >> resolution[1];
-        input_check("Enter resolution, positive integers (e.g. height width): ", 2, resolution);
-        while (resolution[0] <= 0 || resolution[1] <= 0){
-                cout << "You have entered the wrong input" << endl;
-                cout << "Enter resolution, positive integers (e.g. height width): ";
-                cin >> resolution[0] >> resolution[1];
-                input_check("Enter resolution, positive integers (e.g. height width): ", 2, resolution);
-        }
+        // cout << "Enter resolution, positive integers (e.g. height width): ";
+        // cin >> resolution[0] >> resolution[1];
+        // input_check("Enter resolution, positive integers (e.g. height width): ", 2, resolution);
+        // while (resolution[0] <= 0 || resolution[1] <= 0){
+        //         cout << "You have entered the wrong input" << endl;
+        //         cout << "Enter resolution, positive integers (e.g. height width): ";
+        //         cin >> resolution[0] >> resolution[1];
+        //         input_check("Enter resolution, positive integers (e.g. height width): ", 2, resolution);
+        // }
+        resolution[0] = 1080;
+        resolution[1] = 1920;
+        return;
 }
 
 void getCenter(string center[]){
         char input[100];
-        cin.getline(input,sizeof(input));
         cout << endl << "Enter x val: ";
         cin.getline(input,sizeof(input));
         center[0] = input;

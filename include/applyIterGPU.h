@@ -2,8 +2,6 @@
 #define APPLYITERGPU_H
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <cuda_runtime_api.h>
 #include <string>
 
 // Class for running Mandelbrot iteration in parallel
@@ -23,8 +21,6 @@ public:
 
   void copyValues(float* target);
 
-  cudaGraphicsResource_t* getReferencePointer();
-
   void registerTextureResource(GLuint image);
   
   void setMaxIter(size_t max_iter){this->max_iter=max_iter;}
@@ -41,10 +37,6 @@ private:
     size_t max_iter;
     int height, width;
     float* iterData, *iterDataTmp;
-
-    // OPENGL STUFF
-    cudaGraphicsResource_t resource;
-    cudaArray_t mappedArray;
 };
 
 #endif

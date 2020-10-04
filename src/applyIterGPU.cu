@@ -4,10 +4,16 @@
 #include "applyIterGPU.h"
 #include "multi_prec/multi_prec_certif.h"
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
 #include <cuda_fp16.h>
+
+
+
+// OPENGL STUFF
+cudaGraphicsResource_t resource;
+cudaArray_t mappedArray;
+cudaGraphicsResource_t* getReferencePointer();
 
 surface<void, cudaSurfaceType2D> surfRef;
 
@@ -285,12 +291,12 @@ template <int prec>
 __host__
 void moveCenter(int direction, int height, int width, int max_iter, float new_center[2][5], multi_prec<prec> zoom)
 {
-  multi_prec<prec> cr , ci;
-  cr.setData(new_center[0],prec);
-  ci.setData(new_center[1],prec);
+  multi_prec<5> cr , ci;
+  cr.setData(new_center[0],5);
+  ci.setData(new_center[1],5);
 
   float aspect_ratio = float(width)/height;
-  multi_prec<prec> x_range, y_range;
+  multi_prec<5> x_range, y_range;
   if (aspect_ratio<1){
     x_range = 4/zoom;
     y_range = (1/aspect_ratio)*4/zoom;
@@ -371,7 +377,7 @@ void moveCenter(int direction, int height, int width, int max_iter, float new_ce
   //   while (last<c_s.length())last++;
   // }
 
-  for (int i=0; i<prec; i++){
+  for (int i=0; i<5; i++){
     new_center[0][i] = cr.getData()[i];
     new_center[1][i] = ci.getData()[i];
   }
@@ -614,7 +620,7 @@ void applyIterGPU::copyValues(float* target)
   //cudaMemcpy(target, values, height*width*sizeof(float),cudaMemcpyDeviceToHost);
 }
 
-cudaGraphicsResource_t* applyIterGPU::getReferencePointer(){
+cudaGraphicsResource_t* getReferencePointer(){
 	return &resource;
 }
 
