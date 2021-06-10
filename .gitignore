@@ -42,3 +42,10 @@ mandelbrot_explorer
 
 # Build Folder
 build*
+
+# clion builds
+cmake-build-debug
+cmake-build-release
+
+# clion ide stuff
+.idea
