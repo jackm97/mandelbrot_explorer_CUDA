@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.17)
 
 project(mandelbrot_explorer LANGUAGES CXX CUDA)
+set(CMAKE_CUDA_STANDARD 14)
 
 include_directories(include "./extern")
 
@@ -19,12 +20,21 @@ target_link_libraries(mandelbrot PUBLIC glad)
 
 add_library(Shader STATIC "src/Shader.cpp")
 
-add_executable(mandelbrot_explorer "src/main.cpp") 
-set_property(TARGET mandelbrot_explorer PROPERTY CUDA_STANDARD 11)
+add_executable(mandelbrot_explorer "src/main.cpp")
+
+set_target_properties(
+		mandelbrot_explorer
+		PROPERTIES
+		CUDA_SEPARABLE_COMPILATION OFF)
+set_property(TARGET mandelbrot_explorer PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+find_package(CUDAToolkit REQUIRED)
+find_library(CUDADEVRT cudadevrt "${CUDAToolkit_LIBRARY_DIR}")
+
 target_link_libraries( mandelbrot_explorer PUBLIC glad	
-					     PUBLIC mandelbrot
-					     PUBLIC glfw
-					     PUBLIC Shader
-						 PUBLIC lodepng
-					     )
+		PUBLIC mandelbrot
+		PUBLIC glfw
+		PUBLIC Shader
+		PUBLIC lodepng
+		CUDA::cudart_static "${CUDADEVRT}")
 

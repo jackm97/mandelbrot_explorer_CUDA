@@ -13,9 +13,7 @@
 // OPENGL STUFF
 cudaGraphicsResource_t resource;
 cudaArray_t mappedArray;
-cudaGraphicsResource_t* getReferencePointer();
-
-surface<void, cudaSurfaceType2D> surfRef;
+cudaSurfaceObject_t surf;
 
 __device__
 void smoothColor(float& iters, float zr2, float zi2)
@@ -53,7 +51,7 @@ void calcPoint(multi_prec<prec>& cr, multi_prec<prec>& ci, multi_prec<prec>& cen
 template<int prec>
 __global__ void
 __launch_bounds__(256, 4) 
-GPU_PAR_FOR_HELPER(int height, int width, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, int max_iter, float* iterData)
+GPU_PAR_FOR_HELPER(cudaSurfaceObject_t surfRef, int height, int width, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, int max_iter, float* iterData)
 {
   
   multi_prec<prec> cr=0., ci=0., q;
@@ -206,7 +204,7 @@ void GPU_PAR_FOR_T(int height, int width, int max_iter, float center[2][5], floa
   multi_prec<prec> zoom(zoom_str.c_str());
   zoom = (base*zoom);
 
-  GPU_PAR_FOR_HELPER<prec><<<(height*width+255)/256, 256>>>(height, width, centerx_, centery_, zoom, max_iter, iterData);
+  GPU_PAR_FOR_HELPER<prec><<<(height*width+255)/256, 256>>>(surf, height, width, centerx_, centery_, zoom, max_iter, iterData);
 
   // Wait for GPU to finish before accessing on host
   cudaDeviceSynchronize();
@@ -218,7 +216,7 @@ void GPU_PAR_FOR_T(int height, int width, int max_iter, float center[2][5], floa
 template<int prec>
 __global__ void
 __launch_bounds__(256, 4) 
-rotateImage(int direction, int height, int width, float* iterData, float* iterDataTmp)
+rotateImage(cudaSurfaceObject_t surfRef, int direction, int height, int width, float* iterData, float* iterDataTmp)
 {
      
   int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -386,7 +384,7 @@ void moveCenter(int direction, int height, int width, int max_iter, float new_ce
 template<int prec>
 __global__ void
 __launch_bounds__(256, 4) 
-renderRow(float row, int height, int width, int max_iter, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, float* iterData)
+renderRow(cudaSurfaceObject_t surfRef, float row, int height, int width, int max_iter, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, float* iterData)
 {
   
   multi_prec<prec> cr=0., ci=0., q;
@@ -452,7 +450,7 @@ renderRow(float row, int height, int width, int max_iter, multi_prec<prec> cente
 template<int prec>
 __global__ void
 __launch_bounds__(256, 4) 
-renderCol(float col, int height, int width, int max_iter, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, float* iterData)
+renderCol(cudaSurfaceObject_t surfRef, float col, int height, int width, int max_iter, multi_prec<prec> centerx, multi_prec<prec> centery, multi_prec<prec> zoom, float* iterData)
 {
   
   multi_prec<prec> cr=0., ci=0., q;
@@ -536,7 +534,7 @@ void moveTexture_T(int direction, int height, int width, int max_iter, float cen
   zoom = (base*zoom);
 
   // rotate image
-  rotateImage<prec><<<(height*width+255)/256, 256>>>(direction, height, width, iterData, iterDataTmp);
+  rotateImage<prec><<<( height*width+255)/256, 256>>>(surf, direction, height, width, iterData, iterDataTmp);
   cudaDeviceSynchronize();
   cudaMemcpy(iterData,iterDataTmp,height*width*sizeof(float),cudaMemcpyDeviceToDevice);
   cudaDeviceSynchronize(); 
@@ -549,16 +547,16 @@ void moveTexture_T(int direction, int height, int width, int max_iter, float cen
 
   // down
   if (direction == 1)
-    renderRow<prec><<<(width+255)/256, 256>>>(0, height, width, max_iter, centerx_, centery_, zoom, iterData);
+    renderRow<prec><<<(width+255)/256, 256>>>(surf, 0, height, width, max_iter, centerx_, centery_, zoom, iterData);
   // up
   else if (direction == 0)
-    renderRow<prec><<<(width+255)/256, 256>>>(height - 1, height, width, max_iter, centerx_, centery_, zoom, iterData);
+    renderRow<prec><<<(width+255)/256, 256>>>(surf, height - 1, height, width, max_iter, centerx_, centery_, zoom, iterData);
   // right
   else if (direction == 3)
-    renderCol<prec><<<(height+255)/256, 256>>>(width - 1, height, width, max_iter, centerx_, centery_, zoom, iterData);
+    renderCol<prec><<<(height+255)/256, 256>>>(surf, width - 1, height, width, max_iter, centerx_, centery_, zoom, iterData);
   // left
   else if (direction == 2)
-    renderCol<prec><<<(height+255)/256, 256>>>(0, height, width, max_iter, centerx_, centery_, zoom, iterData);
+    renderCol<prec><<<(height+255)/256, 256>>>(surf, 0, height, width, max_iter, centerx_, centery_, zoom, iterData);
     
   cudaDeviceSynchronize();
 
@@ -567,8 +565,6 @@ void moveTexture_T(int direction, int height, int width, int max_iter, float cen
 void applyIterGPU::moveTexture(int direction)
 {
   cudaGraphicsMapResources ( 1, &resource );
-  cudaGraphicsSubResourceGetMappedArray ( &mappedArray, resource, 0, 0 );
-  cudaBindSurfaceToArray(surfRef, mappedArray);
   float prec2 = 9.0, prec3 = 18.0, prec4 = 20.0;
 
   float zoom_check = zoom  + log10(float(max(height, width))) + log10(1000.);
@@ -590,8 +586,6 @@ void applyIterGPU::moveTexture(int direction)
 void applyIterGPU::GPU_PAR_FOR()
 {
   cudaGraphicsMapResources ( 1, &resource );
-  cudaGraphicsSubResourceGetMappedArray ( &mappedArray, resource, 0, 0 );
-  cudaBindSurfaceToArray(surfRef, mappedArray);
   float prec2 = 9.0, prec3 = 18.0, prec4 = 20.0;
 
   float zoom_check = zoom  + log10(float(max(height, width))) + log10(1000.);
@@ -627,4 +621,17 @@ cudaGraphicsResource_t* getReferencePointer(){
 void applyIterGPU::registerTextureResource(GLuint image)
 {
   cudaGraphicsGLRegisterImage( &resource, image, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore);
+  cudaGraphicsMapResources(1, &resource);
+  cudaGraphicsSubResourceGetMappedArray(&mappedArray, resource, 0, 0);
+
+  // Specify surface
+  struct cudaResourceDesc resDesc{};
+  memset(&resDesc, 0, sizeof(resDesc));
+  resDesc.resType = cudaResourceTypeArray;
+
+  // Create the surface objects
+  resDesc.res.array.array = mappedArray;
+  cudaCreateSurfaceObject(&surf, &resDesc);
+
+  cudaGraphicsUnmapResources(1, &resource);
 }
