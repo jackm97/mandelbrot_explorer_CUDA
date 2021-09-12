@@ -104,7 +104,7 @@ Enter file path to save image series: ./images
 ```
 In this mode the sequence is saved to `./images`. Make sure to create the folder first.
 ```
-ffmpeg -r 60 -start_number 0 -i ../images2/image%d.jpg -crf 30 -vcodec libx264 -f mp4 /path/to/animation/animation.mp4
+ffmpeg -r 60 -start_number 0 -i ../images/image%d.jpg -crf 30 -vcodec libx264 -f mp4 /path/to/animation/animation.mp4
 ```
 The above example generates a 60fps animation. The gif in example 2 is actually generated from this example.
 
