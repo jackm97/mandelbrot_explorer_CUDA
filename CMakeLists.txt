@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.19)
 
 project(mandelbrot_explorer LANGUAGES CXX CUDA)
 set(CMAKE_CUDA_STANDARD 14)

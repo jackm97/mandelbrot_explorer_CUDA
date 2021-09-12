@@ -8,6 +8,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 - [CUDA 11+](https://developer.nvidia.com/cuda-toolkit)
+- CMake 3.19+
 
 ### Installing
 ```
